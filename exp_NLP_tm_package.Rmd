@@ -1,0 +1,331 @@
+---
+title: "Managing Unstructured Data with the `tm` package"
+author: "Pier Lorenzo Paracchini"
+date: "03. dec. 2016"
+output:
+  html_document:
+    fig_height: 9
+    fig_width: 9
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, message = FALSE, warning = FALSE)
+```
+
+##Required packages
+
+* `readr` package for reading the file containing the dataset,
+* `tm` package, used perform text mining operations on unstructured data,
+* `snowballC`, used for stemming,
+* `wordcloud`, used for visualization purpose and the creation of wordclouds,
+* `ggplot2`, used for basic plotting.
+
+```{r echo = FALSE}
+require(tm)
+require(SnowballC)
+require(wordcloud)
+require(ggplot2)
+require(readr)
+```
+
+## Introduction
+
+The idea is to play around with the `tm` package and perform some common text mining operations on a set of documents, the __corpus__ under analysis in order to learn the potential of this package and, specifically, to understand how to __use the `tm` package functionality to engineer features from free text__.
+
+## The Data
+
+The data used for this experiment is the [SMS Spam Collection v. 1](http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/), a public set of SMS labeled messages that have been collected for mobile phone spam research. 
+
+The original file has been pre-processed in order to create a CSV file
+
+* `\t` separator has been replaced by `,`
+* `"` in the free text have been replaced by `'`
+* the sms text has been included in `"` (quoted text)
+
+```{r getData}
+dataUri <- "./data/smsspamcollection/SMSSpamCollection.txt"
+rawData <- read_csv(dataUri,col_names = F)
+```
+
+### A quick look at the data
+
+The dataset contains `r dim(rawData)[1]` entries/ observations, where each entry is a classified sms. The first column represents the label, while the second column represents the text of the sms, both are `character` type. The features/ columns do not have proper names (just the standard names assigned by R).
+
+```{r datasetOverview}
+str(rawData)
+```
+
+Proper names are given to the columns - `label` and `text` respectively. The `label`, being a categorical variable with two only possible valiues `ham, spam`, is transformed into a factor; the `text` is kept as `character`.
+
+```{r datasetPrepartion}
+#Adding the column names
+colnames(rawData) <- c("label", "text")
+#Setting the label as a factor
+rawData$label <- as.factor(rawData$label)
+```
+
+How many sms have been tagged as `spam` and `ham`?
+
+```{r someMoreInfo}
+x <- table(rawData$label)
+x
+
+prop.table(x) * 100
+```
+
+## Importing the __corpus__
+
+The `tm` package offers different options for importing a __corpus__. The creation of a __corpus__ is done using `tm::Corpus` class providing two different arguments
+
+* a __source__ object, containing the documents
+* a set of parameters for reading the content from teh source object
+    * a __reader__, a function capable of reading in and processing the format delivered by the source object
+
+The list of available __source__ options can be seen using `tm::getSources()`. Text documents can be imported using a dataframe, a vector, a URI, a directory, etc. 
+
+```{r}
+getSources()
+```
+
+The list of available __readers__ can be found using `tm::getReaders()` with the supported text file formats. Each __source__ has a __default reader__ that can be overriden.
+
+```{r collapse=TRUE}
+getReaders()
+```
+
+We have a dataframe containing all of the documents that should be part of our corpus. The __corpus__  is created using `vectorSource` and the sms text `text`, using the default __reader__.
+
+```{r createCorpus}
+theCorpus <- Corpus(VectorSource(x = rawData$text))
+print(theCorpus)
+```
+
+### Inspecting the __corpus__
+
+In order to display detailed information on a corpus, the `tm::inspect` function can be used.
+
+```{r inspectCorpus1}
+inspect(head(theCorpus,2))
+```
+
+In order to access the individual documents the `[[` can be used either via position or document identifier using the relevant attribute.
+
+```{r inspectCorpus2}
+#Using the [[]] format and the position
+#first document
+theCorpus[[1]]$meta
+theCorpus[[1]]$content
+
+#second document
+theCorpus[[2]]$content
+
+#Getting the document identifier
+doc_id <- meta(theCorpus[[2]], "id")
+identical(theCorpus[[2]], theCorpus[[doc_id]])
+```
+
+## Transforming the corpus
+
+Once we have a corpus, tipically we want to transform its content in order to make it easy to extract information/ insights from it. The `tm` package offfers a variety of __predefined transformations__ that can be applied on the __corpus__. To get a list of the transformation supported use the `tm::getTransformations()` function.
+
+```{r showTrasformations, collapse=TRUE}
+getTransformations()
+```
+
+* `removeNumbers`, remove numbers from a text document
+* `removePunctuation`, remove punctuation `[:punct:]` from a text document
+* `removeWords`, remove words specified in the provided list of words from a text document
+* `stemDocument`, stem words in a text document using Porter's stemming algorithm
+* `stripWhitespace`, strip extra whitespace from a text document, normalized to a single whitespace
+
+
+Custom transformation can be created and used on the corpus using the `tm::content_transformer` function as a wrapper e.g. `tm::content_tansform(customTransformation)`.
+
+Usually one of the first steps is to remove the most frequently used words from the  corpus, called __stopwords__.  __Stopwords__ are the most common, short function terms, whit no important meaning. The `tm` package offers a list of such words `tm::stopwords` function.
+
+```{r stopWords, collapse=TRUE}
+stopwords()
+```
+
+Stopwords are unimportant words that will not actually change the meaning of the documents (the sms text). Running a simple example of removing stopwords, it is possible to see that the "and" word is replaced with an empty space, but "AND" is not removed cause of the uppercase letter (case sensitive).
+
+```{r simpleTransformation, collapse=TRUE}
+removeWords("going and running", stopwords())
+
+removeWords("going AND running", stopwords())
+```
+
+In order to remove the possible challenges connected with uppercase letters, meaningless words, punctuation, numbers, common practices are to simply apply the following transformations to the corpus
+
+* transform the uppercase to lowercase
+* remove the stopwords
+* remove punctuation symbols
+* remove numbers
+* normalize the white spaces (a words removed is transformed into a white space) 
+
+To iteratively apply transformations to the corpus the `tm::tm_map` function is used.
+
+```{r transformCorpus, collapse=TRUE}
+theCorpus <- tm_map(theCorpus, content_transformer(tolower))
+#we had to wrap the tolower function in the content_transformer function, so that our transformation really complies with the tm package's object structure.This is usually required when using a transformation function outside of the tm package (custom transformation).
+theCorpus <- tm_map(theCorpus, removeWords, stopwords())
+theCorpus <- tm_map(theCorpus, removePunctuation)
+theCorpus <- tm_map(theCorpus, removeNumbers)
+theCorpus <- tm_map(theCorpus, stripWhitespace)
+
+##see the content of 3 documents
+theCorpus[[1]]$content
+theCorpus[[50]]$content
+theCorpus[[100]]$content
+```
+
+##  Creating the Term Document Matrix (TDM)
+
+In order to find the most common words in the corpus we need to create a sparse matrix from the corpus using `tm::TermDocumentMatrix`.
+
+A `tm::TermDocumentMatrix` is basically a matrix (__sparse matrix__) which includes the all of the possible words in the rows and the documents in the columns. Each cell represents tne number of occurences of that specific word in that specific document.
+
+```{r sparseMatrix}
+tdm <- TermDocumentMatrix(theCorpus)
+inspect(tdm[1:5, 1:20])
+```
+
+To find the most frequent terms using the sparse matrix, the `tm::findFrequentTerms` function can be used. Example which terms is found at least 80 times in the corpus?
+
+```{r findFrequentTerms, collapse=TRUE}
+#Note the bigger the number of documents, the bigger the lowfreq numer - use 100 if using all of the documents.
+findFreqTerms(tdm, lowfreq = 80)
+```
+
+One of the limitation of the `tm::findFrequentTerms` function is that it does just return a character vector of terms. To get the number of times a term has been found in the __corpus__ the `tm::tm_term_score` function is of great help.
+
+```{r termScore}
+tm_term_score(tdm, c("already", "tell", "day"), FUN = slam::row_sums)
+```
+
+The `tm::findFrequentTerms` and `tm::tm_term_score` functions can be used to find how many times each term has been used in the __corpus__ overall.
+
+```{r frequentTerms}
+getTermsFrequency <- function(corpus.tdm){
+    all.terms <- findFreqTerms(corpus.tdm)
+    freq = tm_term_score(x = corpus.tdm, terms = all.terms, FUN = slam::row_sums)
+    terms <- names(freq); names(freq) <- NULL
+    corpora.allTermsFrequency <- data.frame(term = terms, freq = freq)
+    corpora.allTermsFrequency[order(corpora.allTermsFrequency$freq, decreasing = T), ]
+}
+
+frequent_terms_df <- getTermsFrequency(tdm)
+head(frequent_terms_df, 10)
+tail(frequent_terms_df, 10)
+```
+
+## Useful Visualizations
+
+Visualizations allows to inspecting the list of words/ terms that are part of the __corpus__ and understand how good the transformation process is.
+
+Visualization can help to identify 
+
+* rules that need to be considered when removing punctuation or numbers,
+* other words that can be added to the list of stopwords,
+* other meaningful insights.
+
+```{r plotting}
+visualizeBarPlot <- function(ftm.df, colorBars = "grey40", titleBarPlot = ""){
+    ggplot(ftm.df[1:50,], aes(x = reorder(term,freq), y = freq/1000)) +
+        geom_bar(stat = "identity", fill=colorBars) +
+        xlab("Terms") + ylab("Frequency (* 1000)")+
+        ggtitle(paste(titleBarPlot, "(Top 50)"))  + coord_flip()
+
+}
+
+visualizeWordcloud <- function(ftm.df){
+    mypal <- brewer.pal(8,"Dark2")
+    wordcloud(words = ftm.df$term,
+          freq = ftm.df$freq, 
+          colors = mypal, 
+          scale=c(6,.5),
+          random.order = F, max.words = 200)
+}
+```
+
+Visualizing a boxplot with the top 50 terms in decreasing order
+
+```{r boxplot}
+visualizeBarPlot(frequent_terms_df, titleBarPlot = "High Frequency Terms")
+```
+
+Visualizing a wordcloud with the top 200 terms
+
+```{r wordcloud}
+visualizeWordcloud(frequent_terms_df)
+```
+
+### Stemming words
+
+[Stemming](https://en.wikipedia.org/wiki/Stemming) is the process of reducing inflected (or sometimes derived) words to their word stem, base or root form—generally a written word form. Stemming in R can be performed using the `SnowballC` package. This package has a `SnowballC::wordStem` function that support several languages based on the __Porter's stemming algorithm__.
+
+```{r wordStem}
+#example for word stemming
+wordStem(c("cats", "mastering", "using", "modelling", "models", "model"))
+
+#Note that the Porter's algorithm does not provide real english words in all cases
+#Something to consider later when looking at the results.
+wordStem(c("are", "analyst", "analyze", "analysis"))
+```
+
+Once the stem has been defined, it is possible to complete the stemmed words using `tm::stemCompletion` function. Be careful when performing stem completion ....
+
+```{r stemCompletionExample, collapse=TRUE}
+a <- c("mining", "miners", "mining") #Original words
+b <- stemDocument(a) #Stemmed words
+d <- stemCompletion(
+    b, #stemmed words that we want to complete
+    dictionary = a #dictionary to be used to complete stemmed words
+    )
+#Original words
+a
+
+#Stemmed words
+b
+
+#Completion Stemmed Words
+d
+
+#Do u see anything strange?
+```
+
+```{r stemCorpus}
+theCorpus_stem <- theCorpus
+theCorpus_stem <- tm_map(theCorpus_stem, stemDocument, language = "english")
+tdm_stem <- TermDocumentMatrix(theCorpus_stem)
+frequent_terms_df_stem <- getTermsFrequency(tdm_stem)
+visualizeBarPlot(frequent_terms_df_stem, titleBarPlot = "High Frequency Terms")
+visualizeWordcloud(frequent_terms_df_stem)
+```
+
+## Analysing the Associations among terms
+The `tm::TermDocumentMatrix` can be used to identify the association between the cleaned terms found in the corpus. For this purpose we can use the `tm::findAssocs` function in the `tm` package.
+
+```{r Call}
+#Lets find the associations between the term and others terms that have a correlation higher than 0.2
+findAssocs(tdm, "call", 0.20)
+```
+
+```{r findAssocsBig}
+#Lets find the associations between the bayesian term and others terms that have a correlation higher than 0.2
+findAssocs(tdm, "big", 0.20)
+```
+
+## References
+
+["SMS Spam Collection v. 1"](http://dcomp.sor.ufscar.br/talmeida/smspamcollection/), Almeida, T.A., Gómez Hidalgo, J.M.  
+["Introduction to the tm package"](https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf), `tm` vignette  
+["Text Mining Infrastructure in R"](https://www.jstatsoft.org/article/view/v025i05), Ingo Feinerer, Kurt Hornik, David Meyer
+
+## Session Information
+
+```{r}
+sessionInfo()
+```
+
