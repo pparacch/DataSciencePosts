@@ -1,0 +1,343 @@
+---
+title: "Managing Unstructured Data with the `tidytext` package"
+author: "Pier Lorenzo Paracchini"
+date: "15 december 2016"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, message = FALSE, warning = FALSE)
+```
+
+##Required packages & supporting functions
+
+* `tidytext` package for reading the file containing the dataset,
+* `magrittr` package used for uning the piping format,
+* `dplyr` package used for transformation functions,
+* `ggplot2` & `wordcloud` package used for plotting and visualization,
+* `stringr` package used for text manipulation (regex).
+
+```{r echo = FALSE}
+require(tidytext)
+require(magrittr)
+require(dplyr)
+require(ggplot2)
+require(stringr)
+require(wordcloud)
+```
+
+```{r supportingFunctions}
+visualizeWordcloud <- function(term, freq, title = "", min.freq = 50, max.words = 200){
+    mypal <- brewer.pal(8,"Dark2")
+    wordcloud(words = term,
+          freq = freq, 
+          colors = mypal, 
+          scale=c(8,.3),
+          rot.per=.15,
+          min.freq = min.freq, max.words = max.words,
+          random.order = F)
+}
+```
+
+
+## Introduction
+
+The idea is to play around with the `tidytext` package and perform some common text mining operations on some documents __using the available vignettes and the "Tidy Text Mining with R" book as guides__ (see References).
+
+The `tidytext` package allows to use [tidy text priciples](https://www.jstatsoft.org/article/view/v059i10) with unstructured data/ text making possible to use the [`tidyverse` ecosystem](http://tidyverse.org/).
+
+## The tidy text format
+
+__Tidy text format__ is define as _'a table with one-term-per-row'_. 
+
+### `unnest_tokens` function
+
+Supporting document is a char vector with one element made of 3 sentences. The dataset is not yet compatible with tidy tools (not compliant with tidy data principles).
+
+```{r supportingData}
+document <- paste("Using tidy data principles is important.",
+    "In this package, we provide functions for tidy formats.",
+    "The novels of Jane Austen can be so tidy!")
+
+df <- data.frame(text = document)
+
+```
+
+The `unnest_token` function splits a text column (`input`) into tokens (e.g. sentences, wors, ngrams, ect ) using the [`tokenizers` package](https://github.com/ropensci/tokenizers). 
+
+__Tokenize__ into lines...
+
+```{r unnestTokensLinesExample}
+document_lines <- unnest_tokens(df, input = text, output = line, token = "sentences", to_lower = F)
+document_lines$lineNo <- seq_along(document_lines$line)
+head(document_lines)
+
+```
+
+__Tokenize__ into words (unigrams)...
+
+```{r unnestTokensUnigramsExample}
+df_text_to_word_tidy <- document_lines %>% 
+    unnest_tokens(output = word, input = line, token = "words")
+
+head(df_text_to_word_tidy)
+```
+
+__Tokenize__ into bigrams...
+
+```{r unnestTokensBigramsExample}
+df_text_to_bigrams_tidy <- document_lines %>% 
+    unnest_tokens(output = bigram, input = line, token = "ngrams", n = 2)
+head(df_text_to_bigrams_tidy)
+```
+
+__Tokenize__ into trigrams...
+
+```{r unnestTokensTrigramsExample}
+df_text_to_trigrams_tidy <- document_lines %>% 
+    unnest_tokens(output = trigram, input = line, token = "ngrams", n = 3)
+head(df_text_to_trigrams_tidy)
+```
+
+__A new data structure is created that is compliant with the tidy data principles and that can be used with the standard set of tidytools (`tidyverse` package).__
+
+### Removing stopwords: the `stop_words` dataset and the `anti_join` function
+
+The `tidytext` package offers a data stucture containing a list of english stopwords from 3 different lexicons (onix, SMART and snowball sets) that, optionally, can be used to remove most common and meaningless words from the text under examination.
+
+```{r stopwordsExample}
+head(stop_words)
+```
+
+The `anti_join(x, y)` function of the `dplyr` package can be used to remove a list of words (e.g. stopwords). The function returns all rows from `x` where there is not matching value in `y` (keeping all the columns in `x`).
+
+
+```{r removingStopwordsExample}
+df_tmp <- df_text_to_word_tidy %>%
+    anti_join(stop_words, by = c("word" = "word"))
+head(df_tmp)
+```
+
+### Summarizing word frequencies: the `count` function
+
+The `count` frunction in the `dplyr` package can be used on a tidy dataset to count observations.
+
+```{r countExample}
+df_tmp %>%
+    count(word, sort = TRUE)
+```
+
+
+## Jan Austen Exploratory Case
+
+Using the `janeaustenr` package containing 6 published novels.
+
+Prepare the raw dataset adding a chapter and number of line features for each book.
+
+```{r}
+require(janeaustenr)
+str(austen_books())
+
+original_books <- austen_books() %>%
+    group_by(book) %>%
+    mutate(line = row_number(),
+           chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
+                                                 ignore_case = TRUE)))) %>%
+    ungroup()
+
+head(original_books)
+```
+
+Transfor into a tidy dataset...
+
+```{r transformIntoTidyDataset}
+tidy_books <- original_books %>%
+    unnest_tokens(input = text, output = word, token = "words")
+head(tidy_books)
+```
+
+Remove the stopwords...
+
+```{r removeStopwords}
+tidy_books <- tidy_books %>%
+    anti_join(y = stop_words, by = c("word" = "word"))
+```
+
+Find the most common words...
+
+```{r wordFrequencies}
+word_frequencies <- tidy_books %>%
+    count(word, sort = TRUE)
+
+head(word_frequencies)
+```
+
+```{r visualizeWordFrequencies}
+word_frequencies %>%
+    filter(n > 400) %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(mapping = aes(x = word, y = n)) +
+    geom_col() +
+    coord_flip()
+```
+
+```{r visualizeWordFrequenciesByWordcloud}
+visualizeWordcloud(term = word_frequencies$word, freq = word_frequencies$n)
+```
+
+## H.G. Wells Exploratory Case
+
+The [`gutenbergr` package](https://ropensci.org/tutorials/gutenbergr_tutorial.html) provides access to the __Project Gutenberg__ collection. The package contains tools for downloading books and for finding works of interest.
+
+```{r HGWCase}
+require(gutenbergr)
+
+gutenberg_works(str_detect(author,"Wells, H. G."))$title[1:5]
+ids <- gutenberg_works(str_detect(author,"Wells, H. G."))$gutenberg_id[1:3]
+#Download the time machhine, the war of worlds, the island of doctor Moreau
+hgwells <- gutenbergr::gutenberg_download(ids)
+hgwells <- hgwells %>%
+    group_by(gutenberg_id) %>%
+    mutate(line = row_number()) %>%
+    ungroup()
+```
+
+Transform into a __tidy dataset__...
+
+```{r HGTidy}
+hgwells_tidy <- hgwells %>%
+    unnest_tokens(output = word, input = text, token = "words")
+```
+
+Remove __stopwords__...
+
+```{r HGRemoveStopwords}
+hgwells_tidy <- hgwells_tidy %>%
+    anti_join(stop_words, by = c("word" = "word"))
+```
+
+Calculate __word frequencies__...
+
+```{r HGWordFreqs}
+hgwell_word_freqs_by_book <- hgwells_tidy %>%
+    group_by(gutenberg_id) %>%
+    count(word, sort = TRUE) %>%
+    ungroup()
+```
+
+__Visualize the words with frequency greater than 50 for each book__...
+
+```{r HGVisualizeWordFrequencies}
+hgwell_word_freqs_by_book %>%
+    filter(n > 50) %>%
+    ggplot(mapping = aes(x = word, y = n)) +
+    geom_col() +
+    coord_flip() + facet_wrap(facets = ~ gutenberg_id)
+```
+
+__Visualize the words with frequency greater than 50 for each book__ using __wordclouds__. Books 35, 36, 159 respectively...
+
+```{r visualizeWordFrequenciesByWordcloud_wells}
+par(mfrow = c(1,3), mar = c(0,0,0,0))
+tmp <- hgwell_word_freqs_by_book[hgwell_word_freqs_by_book$gutenberg_id == 35,]
+visualizeWordcloud(term = tmp$word, freq = tmp$n)
+
+tmp <- hgwell_word_freqs_by_book[hgwell_word_freqs_by_book$gutenberg_id == 36,]
+visualizeWordcloud(term = tmp$word, freq = tmp$n)
+
+tmp <- hgwell_word_freqs_by_book[hgwell_word_freqs_by_book$gutenberg_id == 159,]
+visualizeWordcloud(term = tmp$word, freq = tmp$n)
+```
+
+## Comparing works of different authors
+
+Let's use Jane AUten, H.G. Wells and Brontë sisters to make a comparison of the wording used in their works.
+
+```{r austenWorks}
+austen <- original_books
+austen_tidy <- austen %>%
+    unnest_tokens(word, text) %>%
+    anti_join(stop_words)
+
+austen_percent <- austen_tidy %>%
+    mutate(word = str_extract(word, "[a-z]+")) %>%
+    count(word) %>%
+    transmute(word, austen = n/ sum(n), author = "Austen")
+    
+```
+
+
+```{r hgwellsWorks}
+#H. G. Wells
+#Let’s get The Time Machine, The War of the Worlds, The Invisible Man, and The Island of Doctor Moreau.
+hgwells <- gutenberg_download(c(35, 36, 5230, 159))
+hgwells_tidy <- hgwells %>%
+    unnest_tokens(word, text) %>%
+    anti_join(stop_words)
+
+hgwells_percent <- hgwells_tidy %>%
+    mutate(word = str_extract(word, "[a-z]+")) %>%
+    count(word) %>%
+    transmute(word, other = n / sum(n), author = "Wells")
+```
+
+
+```{r BronteWorks}
+# Brontë sisters
+#get Jane Eyre, Wuthering Heights, The Tenant of Wildfell Hall, Villette, and Agnes Grey
+
+bronte <- gutenberg_download(c(1260, 768, 969, 9182, 766))
+bronte_tidy <- bronte %>%
+    unnest_tokens(word, text) %>%
+    anti_join(stop_words)
+
+bronte_percent <- bronte_tidy %>%
+    mutate(word = str_extract(word, "[a-z]+")) %>%
+    count(word) %>%
+    transmute(word, other = n/ sum(n), author = "Bronte")
+```
+
+```{r bindFrequenciesTogether}
+#Comparing Austen to others authors, using others words as reference
+others_freqs_tidy <- bind_rows(bronte_percent, hgwells_percent)
+authors_frequencies <- others_freqs_tidy %>%
+    left_join(austen_percent, by = c("word" = "word")) %>%
+    ungroup()
+    
+```
+
+Visualize the comparison...
+
+```{r worksComparison}
+library(scales)
+
+ggplot(data = authors_frequencies, mapping = aes(x = other, y = austen, color = abs(austen - other))) +
+    geom_abline(color = "gray40", lty = 2) +
+    geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
+    geom_text(aes(label = word), check_overlap = T, vjust = 1.5) +
+    scale_x_log10(labels = percent_format()) +
+    scale_y_log10(labels = percent_format()) +
+    scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
+    facet_wrap(~ author.x, ncol = 2) + 
+    theme(legend.position="none") +
+    labs(y = "Jane Austen", x = NULL)
+```
+
+_'Words that are close to the line in these plots have similar frequencies in both sets of texts, for example, in both Austen and Brontë texts (“miss”, “time”, “day” at the upper frequency end) or in both Austen and Wells texts (“time”, “day”, “brother” at the high frequency end). Words that are far from the line are words that are found more in one set of texts than another.'_
+
+_'Overall, notice that the words in the Austen-Brontë plot are closer to the zero-slope line than in the Austen-Wells plot and also extend to lower frequencies; Austen and the Brontë sisters use more similar words than Austen and H.G. Wells. '_
+
+## References
+
+["Introduction to tidytext](https://cran.r-project.org/web/packages/tidytext/vignettes/tidytext.html), `tidytext` vignette   
+["Tidy Text Mining with R"](http://tidytextmining.com/), Julia Silge and David Robinson  
+
+
+## Session Information
+
+```{r}
+sessionInfo()
+```
+
