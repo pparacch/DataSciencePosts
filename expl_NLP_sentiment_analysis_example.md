@@ -10,6 +10,8 @@ require(tidytext)
 require(tidyverse)
 require(janeaustenr)
 require(stringr)
+require(wordcloud)
+require(reshape2)
 ```
 
 
@@ -337,6 +339,89 @@ get_sentiments("bing") %>%
 ```
 
     `Both lexicons have more negative than positive words, but the ratio of negative to positive words is higher in the Bing lexicon than the NRC lexicon. This will contribute to the effect we see in the plot above, as will any systematic difference in word matches, e.g. if the negative words in the NRC lexicon do not match the words that Jane Austen uses very well.`
+
+## Sentiment Analysis: most common positive & negative words
+
+__Q__: which are the most common positive & negative words in Jane Austen novels?
+
+
+```r
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(linenumber = row_number(),
+         chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", 
+                                                 ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+
+bing_word_counts <- tidy_books %>%
+    inner_join(get_sentiments("bing")) %>%
+    count(word, sentiment, sort = T) %>%
+    ungroup()
+
+bing_word_counts
+## # A tibble: 2,585 × 3
+##        word sentiment     n
+##       <chr>     <chr> <int>
+## 1      miss  negative  1855
+## 2      well  positive  1523
+## 3      good  positive  1380
+## 4     great  positive   981
+## 5      like  positive   725
+## 6    better  positive   639
+## 7    enough  positive   613
+## 8     happy  positive   534
+## 9      love  positive   495
+## 10 pleasure  positive   462
+## # ... with 2,575 more rows
+```
+
+
+```r
+tmp <- bing_word_counts %>%
+    filter(n > 150) %>%
+    mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
+    mutate(word = reorder(word, n))
+
+ggplot(data = tmp, mapping = aes(x = word, y = n, fill = sentiment)) +
+    geom_col(alpha = 0.8, stat = "identity") +
+    labs(y = "Contribution to sentiment", x = NULL) +
+    coord_flip()
+```
+
+![](expl_NLP_sentiment_analysis_example_files/figure-html/visualizationMostCommonPositiveNegativeWords-1.png)<!-- -->
+
+
+__Visualization__ is a powerful tool for investigation even when working with unstructured data. It helps to spot anomalies in the analysis with a glance. For example 
+
+    `the word “miss” is coded as negative but it is used as a title for young, unmarried women in Jane Austen’s works. If it were appropriate for our purposes, we could easily add “miss” to a custom stop-words list.`
+
+Another way to visualize information connected with text mining is to use __[wordclouds](https://en.wikipedia.org/wiki/Tag_cloud)__ (alias __tag clouds__).
+
+__Q__: Which are the most common words in the novels?
+
+
+```r
+tidy_books %>%
+    anti_join(stop_words) %>%
+    count(word) %>%
+    with(wordcloud(word,n,max.words = 100))
+```
+
+![](expl_NLP_sentiment_analysis_example_files/figure-html/wordcloudsMostCommonWords-1.png)<!-- -->
+
+__Q__: Which are the most common positive & negative words in the novels?
+
+
+```r
+tidy_books %>%
+    inner_join(get_sentiments("bing")) %>%
+    count(word, sentiment, sort = TRUE) %>%
+    acast(word ~ sentiment, value.var = "n", fill = 0) %>% 
+    comparison.cloud(max.words = 150)
+```
+
+![](expl_NLP_sentiment_analysis_example_files/figure-html/wordcloudsMostCommonPositiveNegativeWords-1.png)<!-- -->
 
 # References
 
