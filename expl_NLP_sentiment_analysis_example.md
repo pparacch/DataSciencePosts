@@ -1,8 +1,12 @@
 # NLP - Sentiment Analysis using the `tidytext` package
 Pier Lorenzo Paracchini  
-15 december 2016  
+17 December 2016  
 
 
+
+This experiment/ playground activity is based on the content of [chapter 3](http://tidytextmining.com/sentiment.html) of the ["Tidy Text Mining with R"](http://tidytextmining.com) book and it is related to a blog post available at [my personal site](https://pparacch.github.io/posts/). __The code is available in the following [repository](https://github.com/pparacch/DataSciencePosts)__.
+
+The required packages used for this activity are 
 
 
 ```r
@@ -13,16 +17,6 @@ require(stringr)
 require(wordcloud)
 require(reshape2)
 ```
-
-
-Based on the example described in [chapter 3](http://tidytextmining.com/sentiment.html) of the ["Tidy Text Mining with R"](http://tidytextmining.com) book.
-
-# Introduction
-
-__todo__ what is sentiment analysis? what is the main goal of sentiment analysis?
-
-__todo__ understanding the task - add a link to supporting material to have a better understanding of the task, available solutions and algorithms
-
 
 # Sentiment analysis with tidy data
 
@@ -263,7 +257,8 @@ The plot for each novel allows us to see how sentiment changes toward more posit
 
 ## Sentiment Analysis: comparing the three sentiment lexicons
 
-__Q__: Which is the most appropiate lexicon to be used?  
+### __Q__: Which is the most appropiate lexicon to be used?  
+
 It all depends on the purposes of the sentiment analysis...
 
 * Get `Pride & Prejudice` and transform into a tidy dataset
@@ -342,7 +337,7 @@ get_sentiments("bing") %>%
 
 ## Sentiment Analysis: most common positive & negative words
 
-__Q__: which are the most common positive & negative words in Jane Austen novels?
+### __Q__: which are the most common positive & negative words in Jane Austen novels?
 
 
 ```r
@@ -384,7 +379,7 @@ tmp <- bing_word_counts %>%
     mutate(word = reorder(word, n))
 
 ggplot(data = tmp, mapping = aes(x = word, y = n, fill = sentiment)) +
-    geom_col(alpha = 0.8, stat = "identity") +
+    geom_bar(alpha = 0.8, stat = "identity") +
     labs(y = "Contribution to sentiment", x = NULL) +
     coord_flip()
 ```
@@ -398,7 +393,7 @@ __Visualization__ is a powerful tool for investigation even when working with un
 
 Another way to visualize information connected with text mining is to use __[wordclouds](https://en.wikipedia.org/wiki/Tag_cloud)__ (alias __tag clouds__).
 
-__Q__: Which are the most common words in the novels?
+### __Q__: Which are the most common words in the novels?
 
 
 ```r
@@ -410,7 +405,7 @@ tidy_books %>%
 
 ![](expl_NLP_sentiment_analysis_example_files/figure-html/wordcloudsMostCommonWords-1.png)<!-- -->
 
-__Q__: Which are the most common positive & negative words in the novels?
+### __Q__: Which are the most common positive & negative words in the novels?
 
 
 ```r
