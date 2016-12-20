@@ -13,14 +13,21 @@ knitr::opts_chunk$set(echo = TRUE, collapse = T, message = FALSE, warning = FALS
 
 ```{r requiredPackages}
 require(caret)
+require(tm)
+require(wordcloud)
+require(e1071)
+require(MLmetrics)
 ```
 
 * `caret` package
     * for splitting the data
+* `tm` package, for NLP tasks
+* `wordcloud` package, for visualizations
+* `e1071` package, for the Naive Bayes Classifier implementation
+* `MLmetrics` package, for a quick calculation of the evaluation coefficients
+    * confusin matrix, accuracy, F1 score
 
 ## SMS messages: spam or ham?
-
-The story,
 
 _'Advertisers utilize Short Message Service (SMS) messages to target potential consumers with unwanted advertising. This kind of messages are known as SMS spam. Developing a classification algorithm that could filter SMS spam provides a useful tool for cellular phone providers.'_ ... and __Naive Bayes__ classifiers can be used to classify mobile phone sms messages as spam/ ham. 
 
@@ -45,7 +52,7 @@ rawData <-  read.csv("./data/smsspamcollection/SMSSpamCollection.txt",
 
 __Q__: What type of data is available in the dataset?
 
-```{r dataOverview, collapse = TRUE}
+```{r dataOverview}
 #Show the structure of the raw dataset
 str(rawData)
 ```
@@ -60,7 +67,7 @@ Some __possible improvements__ in the data, before doing any exploration, are
 * to __encode__ the `text` feature to `utf-8`, be sure about the encoding (potential __gremlings__ problems) 
 * to __transform__ the `type` feature from a `character` type to a `factor` type...
 
-```{r dataPreProcessing, collapse = TRUE}
+```{r dataPreProcessing}
 #Changing the name of the features/ columns
 colnames(rawData) <- c("type", "text")
 
@@ -75,7 +82,7 @@ summary(rawData)
 
 The data includes `r table(rawData$type)[1] + table(rawData$type)[2]` messages, `r table(rawData$type)[1]` ham messages and `r table(rawData$type)[2]` spam messages.
 
-```{r dataPreProcessingInfo, collapse = TRUE}
+```{r dataPreProcessingInfo}
 #Show the type of messages and their distributions
 table(rawData$type)
 
@@ -107,216 +114,220 @@ prop.table(table(trainData$type)) * 100
 prop.table(table(testData$type)) * 100
 ```
 
+# Exploratory Data Analysis
 
-##Exploring and preparing the data for analysis
-Some of these messages are important (__ham__) whime some of messages are irrelevant (__spam__). Let's see the content of some messages ...
+Exploratory data analysis is done on the training dataset only in order to have an hold out dataset, the testing dataset, that can be used to evaluate the trained model on a completely new set of data.  
 
-```{r exploreMessages, collapse=TRUE}
-head(rawData$text, 5)
+__Q__: What is the content of the messages?
 
-tail(rawData$text, 5)
+```{r explMessageExamples}
+#Hame messages
+trainData_ham <- trainData[trainData$type == "ham",]
+head(trainData_ham$text)
+tail(trainData_ham$text)
+
+#spam messages
+trainData_spam <- trainData[trainData$type == "spam",]
+head(trainData_spam$text)
+tail(trainData_spam$text)
+
+trainData_spam <- NULL
+trainData_ham <- NULL
 ```
 
-###Creating and cleaning the corpus
-SMS messages are strings of text composed of words, spaces, numbers, and punctuation. We needs to consider how to remove numbers, punctuation, handle uninteresting words such as and, but, and or, and how to break apart sentences into individual words.
+Just looking at few samples it is possible to see some challenges
 
-__Note!__ `tm` package - Text Mining package in R - can be used for such purpose. For installing the package run `install.packages("tm")`.
+* contraction like `I'm`, `don't`
+* abbreviations like `u`, `r`, `fr` 
+* possible internet slang
+* links & numbers - especially in the spam messages
+    * this could be a possible hidden source of valuable information
+        * how many numbers are in the message?
+        * how many links are in the message?
 
-__First step__ is creating the **corpus**, a R object representing a collection of text documents. In this specific case a text document refers to a single SMS message.
+SMS messages are strings of text composed of words, spaces, numbers, and punctuation. 
 
-```{r corpusCreation, collapse=TRUE}
-library(tm) #loading tm library for usage
-corpus <- Corpus(VectorSource(rawData$text))
+## Cleaning the data
 
+When looking at the messages, it is needed to understand __what is the valuable information?__ and __what is noise?__. Strategies need to be defined on how to process and transform the data, e.g. how to
+
+* break apart messages into sentences, and sentences into individual words
+* process numbers, for examples
+    * remove the numbers (simplest approach)
+    * transform numbers into a KEYWORD e.g. aNUMBERa
+* manage contractions like `I'm`, `don't`, etc.
+* manage abbreviations quite common in social media messages
+* manage punctuation, 
+* handle uninteresting words such as and, but, etc. - such words are usually defined as stopwords.
+
+All of those considerations are going to define the pipeline that is going to be used to clean/ transform the data before proceeding with feature engineering.
+
+In this experiment a simplicistic approach is going to used for cleaning/ transforming the data 
+
+* reduce all messages to lowe case
+* remove numbers
+* remove stopwords
+* remove punctuations
+* normalize whitespeces
+
+__Note!__ The `tm` package - Text Mining package in R - is used for such purpose. Optionally the `tidytext` package could be used for working with tidy data.
+
+```{r explCleaningData}
+#create the corpus
+corpus <- Corpus(VectorSource(trainData$text))
 #basic info about the corpus
 print(corpus)
-```  
-Please note that the corpus contains 5559 text documents (aka sms text).
 
-```{r inspectCorpus, collapse=TRUE}
-#Inspect the first 4 documents
+#Inspect 4 documents
 corpus[[1]]$content
 corpus[[2]]$content
-corpus[[3]]$content
-corpus[[4]]$content
-```
+corpus[[50]]$content
+corpus[[100]]$content
 
-Before splitting the text into words some __cleaning steps__ need to be performed in order to remove punctuation and other characters that may create problems.
-
-__Note!!__ Standard transformations supported by the `tm` package. 
-```{r standardTransformation, echo = FALSE}
-getTransformations()
-```
-
-```{r cleanUpCorpus}
-#1. normalize to lowercase
-corpus <- tm_map(corpus, tolower)
-
+#1. normalize to lowercase (not a standard tm transformation)
+corpus <- tm_map(corpus, content_transformer(tolower))
 #2. remove numbers
 corpus <- tm_map(corpus, removeNumbers)
-
 #3. remove stopwords e.g. to, and, but, or (using predefined set of word in tm package)
 corpus <- tm_map(corpus, removeWords, stopwords())
-
 #4. remove punctuation
 corpus <- tm_map(corpus, removePunctuation)
-
 #5. normalize whitespaces
-#Now that we have removed numbers, stop words, and punctuation, the text messages are left with #blank spaces where these characters used to be. The last step then is to remove additional #whitespace, leaving only a single space between words.
 corpus <- tm_map(corpus, stripWhitespace)
 
-#Be sure to use the following script once you have completed preprocessing.
-#This tells R to treat your preprocessed documents as text documents because of the non standard transformations (tolower)
-corpus <- tm_map(corpus, PlainTextDocument)
-```
-
-```{r inspectCleanCorpus, collapse=TRUE}
-#Inspect the first 4 documents
+#Inspect the same 4 documents to visualize how the documents have been
+#transformed
 corpus[[1]]$content
 corpus[[2]]$content
-corpus[[3]]$content
-corpus[[4]]$content
+corpus[[50]]$content
+corpus[[100]]$content
 ```
 
-###Tokenization
-Now that the data are processed to our __liking__, the final step is to split the messages into individual elements through a process called __tokenization__. A __token__ is a single element of a text string; in this case, the tokens are words.
+## Visual Analysis of the high frequency words (ham vs. spam)
 
-From the __corpus__ a data structured called __sparse matrix__ is created. In the __sparse matrix__, each row (observation) represents a document (SMS text message) and each column is a token/ word. The number in a cell represents the number of time the token (col) is present in the document represented by that row.
+Another interesting visualization involves comparing the clouds of SMS __spam__ and __ham__ ... 
 
-```{r generateSparseMatrix, collapse=TRUE}
-sms_dtm <- DocumentTermMatrix(corpus)
+```{r explWordClouds}
+pal1 <- brewer.pal(9,"YlGn")
+pal1 <- pal1[-(1:4)]
 
-#basic information about the sparse matrix
-print(sms_dtm)
-```
+pal2 <- brewer.pal(9,"Reds")
+pal2 <- pal2[-(1:4)]
 
-__Note!!__ The sparse matrix has the following dimensions
-
-* nrows = 5559 -> the number of documents
-* ncols = 7868 -> the number of features/ terms found in the corpus.
-
-###Creation of the __Training__ and __Test__ datasets
-Using the `caTools` package, specifically `sample.split` function to create a test and training sets for rawData, clean corpus and sparse matrix. Advantage of using such a function is _preserving relative ratios of different labels in X_.
-
-```{r createDatasets}
-library(caTools)
-set.seed(19711004)
-
-spl_data <- sample.split(rawData$type, SplitRatio = 0.7)
-
-rawData_train <- subset(rawData, spl_data) #Get only where TRUE
-sms_dtm_train <- sms_dtm[spl_data,] #Get only where TRUE
-corpus_train <- corpus[spl_data] #Get only where TRUE
-
-rawData_test <- subset(rawData, !spl_data) #Get only where FALSE
-sms_dtm_test <- sms_dtm[!spl_data,] #Get only where FALSE
-corpus_test <- corpus[!spl_data] #Get only where FALSE
-```
-
-```{r infoTrainingTestDatasets, collapse=TRUE}
-#Training dataset info
-prop.table(table(rawData_train$type))
-
-#Test dataset info
-prop.table(table(rawData_test$type))
-```
-
-###(Optional) Visual Analysis
-Using the `wordclod` package to visualize frequency of words in prepared text data.
-
-```{r settingWordCloud, collapse=TRUE}
-library(wordcloud)
-pal <- brewer.pal(9,"YlGn")
-pal <- pal[-(1:4)]
-```
-
-__Wordcloud for training dataset__ ....
-```{r wordCloudTrain, collapse=TRUE}
 #min.freq initial settings -> around 10% of the number of docs in the corpus (40 times)
-wordcloud(corpus_train, min.freq = 40, random.order = FALSE, colors = pal)
-```
-
-Another interesting visualization involves comparing the clouds of SMS __spam__ and __ham__ using the raw text messages that are going to be used to train the algorith... 
-```{r dataWordCloudRawTrainig, collapse=TRUE}
-rawData_train_spam <- subset(rawData_train, type == "spam")
-rawData_train_ham <- subset(rawData_train, type == "ham")
-```
-
-__Spam__ overview...
-```{r wordCloudRawTrainigSpam, collapse=TRUE}
-wordcloud(rawData_train_spam$text, min.freq = 40, random.order = FALSE, colors = pal)
-```
-
-__Ham__ overview...
-```{r wordCloudRawTrainigHam, collapse=TRUE}
-wordcloud(rawData_train_ham$text, min.freq = 40, random.order = FALSE, colors = pal)
+par(mfrow = c(1,2))
+wordcloud(corpus[trainData$type == "ham"], min.freq = 40, random.order = FALSE, colors = pal1)
+wordcloud(corpus[trainData$type == "spam"], min.freq = 40, random.order = FALSE, colors = pal2)
 ```
 
 Spam SMS messages include words such as urgent, free, mobile, call, claim, and stop; these terms do not appear in the ham cloud at all. Instead, ham messages use words such as can, sorry, need, and time. These stark differences suggest that our naive Bayes model will have some strong key words to differentiate between the classes.
 
-###Creating indicator features for frequent words
-The next step is to transform the sparse matrix into a data structure that can be used to train a __naive Bayes classifier__.
+# Feature Engineering
 
-```{r showSparseMatrixInfo}
+## Transforming the data: tokenization
+
+Now that the messages are processed to our __liking__, the next step is to split the messages into individual elements through a process called __tokenization__. A __token__ is a single element of a text string; in this case, the tokens are words.
+
+From the __corpus__ a data structured called __sparse matrix__ is created. In the __sparse matrix__, each row (observation) represents a document (SMS text message) and each column is a token/ word. The number in a cell represents the number of time the token (col) is present in the document represented by that row.
+
+```{r featureEngTransformingData}
+#Creation of the DTM considering terms with at least 2 chars
+sms_dtm <- DocumentTermMatrix(corpus, control = list(global = c(2, Inf)))
+#basic information about the sparse matrix
+print(sms_dtm)
+#To have an idea of the content of the document term matrix
+inspect(sms_dtm[1:10, 5:13])
+```
+
+__Note!!__ The sparse matrix has the following dimensions `r dim(sms_dtm)[1]` documents and `r dim(sms_dtm)[2]` terms/ words where
+
+* each row is a document/ message
+* exch column is a term/ word/ feature
+
+The sparse matrix needs to be transformed into a data structure that can be used to train a __naive Bayes classifier__. __Not all the terms/ words in the sparse matrix are useful for classification__. In order to reduce the number of features we can proceed to consider the words that appears at least a certain number of times (__frequent words__) and identify the features (terms dictionary).
+
+```{r featEngTerms}
+sms_features <- findFreqTerms(sms_dtm, 5) #find words that appears at least 5 times
+summary(sms_features)
+head(sms_features)
+```
+
+There are `r length(sms_features)` terms/ features idendified as frequent terms. __To limit our training and test matrix to only the words in the dictionary of frequent terms__ we can use the following commands ...
+
+```{r featEngReduceSparseMatrixToFeatures, collapse=TRUE}
+sms_dtm_train <- DocumentTermMatrix(corpus, list(global = c(2, Inf), dictionary = sms_features))
 print(sms_dtm_train)
-```
- The sparse matrix used for training include 3891 documents and 7868 features (terms). __Not all of these terms will be useful for classification__. In order to reduce thenumber of features we can proceed to consider the words that appears at least a certain number of times (__frequent words__)...
-
-```{r findFreqTerms,collapse=TRUE}
-sms_dict <- findFreqTerms(sms_dtm_train, 5) #find words that appears at least 5 times
-summary(sms_dict)
-```
-
-There are 1152 terms/ features idendified as frequent terms. __To limit our training and test matrix to only the words in the dictionary of frequent terms__ we can use the following commands ...
-
-```{r reduceSparseMatrixToFrequentTerms, collapse=TRUE}
-sms_train <- DocumentTermMatrix(corpus_train, list(dictionary = sms_dict))
-print(sms_train)
-
-sms_test <- DocumentTermMatrix(corpus_test, list(dictionary = sms_dict))
-print(sms_test)
 ```
 
 The naive Bayes classifier is typically trained on data with categorical features. This poses a problem since the cells in the sparse matrix indicate a count of the times a word appears in a message. We should change this to a factor variable that simply indicates yes or no depending on whether the word appears at all in a document.
 
-Let's create a function for that ...
-```{r supportingFunctions}
+```{r featEngNormalizeFeatures}
 convert_counts <- function(x){
   x <- ifelse(x > 0, 1, 0)
   x <- factor(x, levels = c(0,1), labels = c("No", "Yes"))
   return (x)
 }
+sms_dtm_train <- apply(sms_dtm_train, MARGIN = 2, convert_counts)
 ```
 
-Let's apply the function to each column in the sparse matrices ...
-```{r categoricalizeSparseMatrix}
-sms_train <- apply(sms_train, MARGIN = 2, convert_counts)
-sms_test <- apply(sms_test, MARGIN = 2, convert_counts)
-```
+Now we have a matrix each with a "Yes" or "No" indicating if a specific word (feature) appears in the documents/ messages (rows).
 
-Now we have two matrixes each with a "Yes" or "No" indicating if a specific word (feature) appears in the messages (rows).
 ```{r showCategoralizedSparseMatrix}
-head(sms_train[,1:5])
-
-head(sms_test[,1:5])
+head(sms_dtm_train[,1:5])
 ```
 
-##Train the model using the training dataset
-```{r loadMLlibrary}
-#Library implementing the naive Bayes algorithm
-library(e1071)
-```
+# Train the model
+
+The model can be train using the corpus created using the training dataset and the training classification labels
 
 ```{r trainTheModel}
-sms_classifier <- naiveBayes(sms_train, rawData_train$type)
-```
-##Test the model against the test dataset and evaluate model performance
+sms_classifier <- naiveBayes(sms_dtm_train, trainData$type)
 
-```{r testTheModel, collapse=TRUE}
-sms_test_pred <- predict(sms_classifier, sms_test)
+sms_classifier[[2]][1:5]
 ```
+
+For each terms/ words available in `sms_features` - the features - probabilities are given. Such probabilities are used for calculating the Bayesian probabilities of a message being __ham__ or __spam__. 
+
+# Evaluate the model
+
+The evaluation of the model is performed using the testing dataset. The testing dataset needs to go through the same cleaning & feature engineering processes applied to the training dataset.
+
+## Cleaning & Feature Engineering
+
+```{r evaluatePrepareTestingDataset}
+corpus <- Corpus(VectorSource(testData$text))
+#1. normalize to lowercase (not a standard tm transformation)
+corpus <- tm_map(corpus, content_transformer(tolower))
+#2. remove numbers
+corpus <- tm_map(corpus, removeNumbers)
+#3. remove stopwords e.g. to, and, but, or (using predefined set of word in tm package)
+corpus <- tm_map(corpus, removeWords, stopwords())
+#4. remove punctuation
+corpus <- tm_map(corpus, removePunctuation)
+#5. normalize whitespaces
+corpus <- tm_map(corpus, stripWhitespace)
+
+sms_dtm_test <- DocumentTermMatrix(corpus, list(global = c(2, Inf), dictionary = sms_features))
+print(sms_dtm_test)
+
+sms_dtm_test <- apply(sms_dtm_test, MARGIN = 2, convert_counts)
+sms_dtm_test[1:10, 5:12]
+```
+
+## Evaluate the model
+
 ```{r evaluateTheModel, collapse=TRUE}
-#table actual (row) vs. predicted (col)
-table(rawData_test$type, sms_test_pred)
+sms_test_pred <- predict(sms_classifier, sms_dtm_test)
+
+#table actual (row) vs. predicted (col): confusion matrix
+table(testData$type, sms_test_pred)
+
+ConfusionMatrix(sms_test_pred, testData$type)
+
+Accuracy(sms_test_pred, testData$type)
+
+F1_Score(sms_test_pred, testData$type)
 ```
-Looking at the table we can see that 29 messages out of 1467 ham messages (`r 29/ 1467`) have been incorrcetly classified as spam, while 6 messages out of 201 spam messages (`r 6/ 201`) have been incorrectly classified as ham.
+
+Looking at the table we can see that 30 messages out of 1392 messages (`r 30/ 1392`) have been incorrectly classified as spam or ham. The model has an accuracy of `r Accuracy(sms_test_pred, testData$type)` & an F1 score of `r F1_Score(sms_test_pred, testData$type)`. 
+
