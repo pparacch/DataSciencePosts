@@ -1,8 +1,10 @@
 # NLP - Classification using a Naive Bayes classifier
 Pier Lorenzo Paracchini  
-23 December 2016  
+22 December 2016  
 
 
+
+## Required Packages
 
 
 ```r
@@ -14,12 +16,12 @@ require(MLmetrics)
 ```
 
 * `caret` package
-    * for splitting the data
-* `tm` package, for NLP tasks
+    * splitting the data with stratified sampling
+* `tm` package, for NLP basic tasks
 * `wordcloud` package, for visualizations
 * `e1071` package, for the Naive Bayes Classifier implementation
 * `MLmetrics` package, for a quick calculation of the evaluation coefficients
-    * confusin matrix, accuracy, F1 score
+    * confusion matrix, accuracy, F1 score
 
 ## SMS messages: spam or ham?
 
@@ -490,5 +492,10 @@ F1_Score(sms_test_pred, testData$type)
 ## [1] 0.9876847
 ```
 
-Looking at the table we can see that 30 messages out of 1392 messages (0.0215517) have been incorrectly classified as spam or ham. The model has an accuracy of 0.9784483 & an F1 score of 0.9876847. 
+Looking at the table we can see that 30 messages out of 1392 messages (0.0215517) have been incorrectly classified as spam or ham. The model has an accuracy of 0.9784483 & a F1 score of 0.9876847. 
 
+## References
+
+* [SMS Spam Collection v. 1](http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/), the dataset
+* "[An amazing journey in Data Science](https://pparacch.github.io/)", my personal diary of the journey
+* [.Rmd file](https://github.com/pparacch/DataSciencePosts/blob/master/exp_NLP_NaiveBayes_example.Rmd), behind this RPubs 

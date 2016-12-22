@@ -11,7 +11,7 @@
 
 <meta name="author" content="Pier Lorenzo Paracchini" />
 
-<meta name="date" content="2016-12-23" />
+<meta name="date" content="2016-12-22" />
 
 <title>NLP - Classification using a Naive Bayes classifier</title>
 
@@ -118,11 +118,13 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">NLP - Classification using a Naive Bayes classifier</h1>
 <h4 class="author"><em>Pier Lorenzo Paracchini</em></h4>
-<h4 class="date"><em>23 December 2016</em></h4>
+<h4 class="date"><em>22 December 2016</em></h4>
 
 </div>
 
 
+<div id="required-packages" class="section level2">
+<h2>Required Packages</h2>
 <pre class="r"><code>require(caret)
 require(tm)
 require(wordcloud)
@@ -131,16 +133,17 @@ require(MLmetrics)</code></pre>
 <ul>
 <li><code>caret</code> package
 <ul>
-<li>for splitting the data</li>
+<li>splitting the data with stratified sampling</li>
 </ul></li>
-<li><code>tm</code> package, for NLP tasks</li>
+<li><code>tm</code> package, for NLP basic tasks</li>
 <li><code>wordcloud</code> package, for visualizations</li>
 <li><code>e1071</code> package, for the Naive Bayes Classifier implementation</li>
 <li><code>MLmetrics</code> package, for a quick calculation of the evaluation coefficients
 <ul>
-<li>confusin matrix, accuracy, F1 score</li>
+<li>confusion matrix, accuracy, F1 score</li>
 </ul></li>
 </ul>
+</div>
 <div id="sms-messages-spam-or-ham" class="section level2">
 <h2>SMS messages: spam or ham?</h2>
 <p><em>‘Advertisers utilize Short Message Service (SMS) messages to target potential consumers with unwanted advertising. This kind of messages are known as SMS spam. Developing a classification algorithm that could filter SMS spam provides a useful tool for cellular phone providers.’</em> … and <strong>Naive Bayes</strong> classifiers can be used to classify mobile phone sms messages as spam/ ham.</p>
@@ -537,7 +540,15 @@ Accuracy(sms_test_pred, testData$type)
 
 F1_Score(sms_test_pred, testData$type)
 ## [1] 0.9876847</code></pre>
-<p>Looking at the table we can see that 30 messages out of 1392 messages (0.0215517) have been incorrectly classified as spam or ham. The model has an accuracy of 0.9784483 &amp; an F1 score of 0.9876847.</p>
+<p>Looking at the table we can see that 30 messages out of 1392 messages (0.0215517) have been incorrectly classified as spam or ham. The model has an accuracy of 0.9784483 &amp; a F1 score of 0.9876847.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li><a href="http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/">SMS Spam Collection v. 1</a>, the dataset</li>
+<li>“<a href="https://pparacch.github.io/">An amazing journey in Data Science</a>”, my personal diary of the journey</li>
+<li><a href="https://github.com/pparacch/DataSciencePosts/blob/master/exp_NLP_NaiveBayes_example.Rmd">.Rmd file</a>, behind this RPubs</li>
+</ul>
 </div>
 </div>
 

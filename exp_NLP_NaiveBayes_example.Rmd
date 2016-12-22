@@ -1,7 +1,7 @@
 ---
 title: "NLP - Classification using a Naive Bayes classifier"
 author: "Pier Lorenzo Paracchini"
-date: "23 December 2016"
+date: "22 December 2016"
 output: 
   html_document: 
     keep_md: yes
@@ -10,6 +10,8 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, collapse = T, message = FALSE, warning = FALSE)
 ```
+
+## Required Packages
 
 ```{r requiredPackages}
 require(caret)
@@ -20,12 +22,12 @@ require(MLmetrics)
 ```
 
 * `caret` package
-    * for splitting the data
-* `tm` package, for NLP tasks
+    * splitting the data with stratified sampling
+* `tm` package, for NLP basic tasks
 * `wordcloud` package, for visualizations
 * `e1071` package, for the Naive Bayes Classifier implementation
 * `MLmetrics` package, for a quick calculation of the evaluation coefficients
-    * confusin matrix, accuracy, F1 score
+    * confusion matrix, accuracy, F1 score
 
 ## SMS messages: spam or ham?
 
@@ -329,5 +331,10 @@ Accuracy(sms_test_pred, testData$type)
 F1_Score(sms_test_pred, testData$type)
 ```
 
-Looking at the table we can see that 30 messages out of 1392 messages (`r 30/ 1392`) have been incorrectly classified as spam or ham. The model has an accuracy of `r Accuracy(sms_test_pred, testData$type)` & an F1 score of `r F1_Score(sms_test_pred, testData$type)`. 
+Looking at the table we can see that 30 messages out of 1392 messages (`r 30/ 1392`) have been incorrectly classified as spam or ham. The model has an accuracy of `r Accuracy(sms_test_pred, testData$type)` & a F1 score of `r F1_Score(sms_test_pred, testData$type)`. 
 
+## References
+
+* [SMS Spam Collection v. 1](http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/), the dataset
+* "[An amazing journey in Data Science](https://pparacch.github.io/)", my personal diary of the journey
+* [.Rmd file](https://github.com/pparacch/DataSciencePosts/blob/master/exp_NLP_NaiveBayes_example.Rmd), behind this RPubs 
