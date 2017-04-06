@@ -1,0 +1,4 @@
+.DS_Store
+.Idea
+.ipynb_checkpoints
+scripts/__pycache__
