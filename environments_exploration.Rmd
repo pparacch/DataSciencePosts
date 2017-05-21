@@ -7,7 +7,7 @@ output:
   html_notebook: default
 ---
 
-The content of this blog is based on notes collected and experiments performed while reading the __["Environments"](http://adv-r.had.co.nz/Environments.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1] in order to better understand the basic concepts behind environments.
+The content of this blog is based on notes collected and experiments performed while reading the __["Environments"](http://adv-r.had.co.nz/Environments.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1] in order to better understand the basic concepts behind environments. The supporting [R markdown](https://github.com/pparacch/DataSciencePosts/blob/master/environments_exploration.Rmd) used for generating these notes/ experiments can be find in the following [repository](https://github.com/pparacch/DataSciencePosts).
 
 # Introduction
 
