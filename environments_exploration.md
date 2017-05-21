@@ -1,4 +1,5 @@
 # Environments in R: an exploration
+Pier Lorenzo Paracchini, 21.05.2017  
 
 The content of this blog is based on notes collected and experiments performed while reading the __["Environments"](http://adv-r.had.co.nz/Environments.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1] in order to better understand the basic concepts behind environments.
 
@@ -180,7 +181,7 @@ ancestors <- function(the_env){
 
 #Show the ancestors for my environment
 ancestors(my_environment)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 ## <environment: R_GlobalEnv>
 ## <environment: package:stats>
 ## attr(,"name")
@@ -212,7 +213,7 @@ ancestors(my_environment)
 ## [1] "package:methods"
 ## attr(,"path")
 ## [1] "/Library/Frameworks/R.framework/Versions/3.3/Resources/library/methods"
-## <environment: 0x7f84d784ba78>
+## <environment: 0x7f961f0fe278>
 ## attr(,"name")
 ## [1] "Autoloads"
 ## <environment: base>
@@ -227,7 +228,7 @@ Environments form a tree. In order to find where a bind is defined, in which env
 ```r
 #Print basic environment info connected with
 print(my_environment)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 
 #Create a variable in the current environment (global environment)
 x <- 10
@@ -238,7 +239,7 @@ pryr::where("x")
 pryr::where("mean")
 ## <environment: base>
 pryr::where("x", env = my_environment)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 pryr::where("mean", env = my_environment)
 ## <environment: base>
 ```
@@ -268,7 +269,7 @@ where_local_r("x")
 where_local_r("mean")
 ## <environment: base>
 where_local_r("x", env = my_environment)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 where_local_r("mean", env = my_environment)
 ## <environment: base>
 ```
@@ -308,7 +309,7 @@ __How to change the enclosing environment associated to a function...__
 
 ```r
 print(my_environment)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 
 f <- function(x){ x + 1}
 environment(f)
@@ -317,7 +318,7 @@ environment(f)
 #Change the enclosing environment
 environment(f) <- my_environment
 environment(f)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 ```
 
 ### Binding Environments
@@ -347,7 +348,7 @@ pryr::where("f")
 ```r
 #Info about my_environment
 print(my_environment)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 
 #Create a new function in my_environment
 my_environment$the_function <- function(y){ y * 2 }
@@ -358,7 +359,7 @@ environment(my_environment$the_function)
 
 #The binding environment
 pryr::where("the_function", env = my_environment)
-## <environment: 0x7f84dc229e28>
+## <environment: 0x7f9623056660>
 ```
 
 ![](./envs/binding_environment_1.png)
@@ -427,7 +428,7 @@ print(environment())
 g(10)
 ## [1] "----Inside function----"
 ## [1] "Current Env:"
-## <environment: 0x7f84dc31f708>
+## <environment: 0x7f962315eb50>
 ## [1] "Parent Env:"
 ## <environment: R_GlobalEnv>
 ## Defining a...
@@ -435,7 +436,7 @@ g(10)
 g(10)
 ## [1] "----Inside function----"
 ## [1] "Current Env:"
-## <environment: 0x7f84dc29be28>
+## <environment: 0x7f96230da3f8>
 ## [1] "Parent Env:"
 ## <environment: R_GlobalEnv>
 ## Defining a...
@@ -484,14 +485,14 @@ print(environment())
 g(10)
 ## [1] "----Inside function----"
 ## [1] "Current Env:"
-## <environment: 0x7f84dc5e69f0>
+## <environment: 0x7f9622ccb1f0>
 ## [1] "Parent Env:"
 ## <environment: R_GlobalEnv>
 ## [1] "----Inside function::function----"
 ## [1] "Current Env:"
-## <environment: 0x7f84dc6e2a28>
+## <environment: 0x7f9622ccf260>
 ## [1] "Parent Env:"
-## <environment: 0x7f84dc5e69f0>
+## <environment: 0x7f9622ccb1f0>
 ## Defining a...
 ## [1] 1
 ```

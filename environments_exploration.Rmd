@@ -1,5 +1,6 @@
 ---
 title: "Environments in R: an exploration"
+author: "Pier Lorenzo Paracchini, 21.05.2017"
 output:
   html_document: 
     keep_md: yes
