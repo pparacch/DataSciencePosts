@@ -9,7 +9,7 @@ The content of this blog is based on notes collected and experiments performed w
 
     "In most programming languages, you can only access the values of a function’s arguments. In R, you can also access the code used to compute them. This makes it possible to evaluate code in non-standard ways: to use what is known as non-standard evaluation, or NSE for short. NSE is particularly useful for functions when doing interactive data analysis because it can dramatically reduce the amount of typing." [1]
 
-NSE is about accessing the code used to specify any valid R expression and used it in a non standard way.
+__NSE__ is about __accessing the code used to specify any valid R expression__ and used it in a __non standard way__.
 
 ## How to to capture expression
 
@@ -201,7 +201,7 @@ pairwise.t.test
 DNAME <- paste(deparse(substitute(x)), "and", deparse(substitute(g)))
 ```
 
-## The `subset()` a NSE application
+## `subset()`, an example of NSE
 
 The `subset()` function returns a subset of a provided dataframe (not only) which meet the provided conditions, minimizing the typing involved. See example below
 
@@ -261,7 +261,7 @@ getAnywhere(subset.data.frame())
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## <bytecode: 0x7fc4b0d3c8d8>
+## <bytecode: 0x7fce3912cd18>
 ## <environment: namespace:base>
 ```
 
@@ -351,6 +351,162 @@ eval(a, envir = a_dataframe)
 eval(z, envir = a_dataframe)
 ## Error in eval(z, envir = a_dataframe): object 'z' not found
 ```
+
+### A simple `subset` implementation
+
+
+```r
+rm(list = ls())
+a_dataframe <- data.frame(a = 1:5, b = 5:1, c = c(6,7,8,9,10), z = 1:5)
+
+subset2 <- function(x, condition){
+    condition_exp <- substitute(condition)
+    condition_evaluated <- eval(condition_exp, envir = x)
+    x[condition_evaluated,]
+}
+
+subset2(a_dataframe, a >=2)
+##   a b  c z
+## 2 2 4  7 2
+## 3 3 3  8 3
+## 4 4 2  9 4
+## 5 5 1 10 5
+```
+
+## Scoping issues when using NSE
+
+When using NSE, using expressions instead of values, things can go wrongs in different ways. When evaluating an expression using `eval` the look up for variables is done in
+
+* (first) `envir`, the environment where `expr` is going to be evaluated.  
+* if not found in `envir` the search will continue in `enclos` (enclosure).
+
+Some examples when scoping goes wrong ....
+
+
+
+```r
+rm(list = ls())
+
+a_dataframe <- data.frame(a = 1:5, b = 5:1, z = 1:5)
+
+subset2 <- function(x, condition){
+    condition_exp <- substitute(condition)
+    print(condition_exp)
+    condition_evaluated <- eval(condition_exp, envir = x)
+    x[condition_evaluated,]
+}
+
+#################
+#A simple example
+subset2(a_dataframe, a == 4)
+## a == 4
+##   a b z
+## 4 4 2 4
+
+#################
+#Another simple example that should give
+#the same result as before
+
+#When evaluating the expression y is not defined in the
+#dataframe (envir), so it will be searched in the enclosure
+#the calling environment when using a dataframe (as env)
+#so y is found and the expression connected with the condition
+#is evaluated.
+y <- 4
+subset2(a_dataframe, a == y)
+## a == y
+##   a b z
+## 4 4 2 4
+
+#################
+#Another simple example that should give
+#the same result as before
+
+#this time x unfortunately is defined as one of the arguments of the function
+#so the wrong value is picked up when the expression connected with the condition
+#is evaluate. x is actually the dataframe itself
+x <- 4
+subset2(a_dataframe, a == x)
+## a == x
+##       a  b  z
+## 1     1  5  1
+## 2     2  4  2
+## 3     3  3  3
+## 4     4  2  4
+## 5     5  1  5
+## NA   NA NA NA
+## NA.1 NA NA NA
+## NA.2 NA NA NA
+## NA.3 NA NA NA
+## NA.4 NA NA NA
+## NA.5 NA NA NA
+
+#another similar example
+#with a more criptical error
+condition <- 4
+subset2(a_dataframe, a == condition)
+## a == condition
+## Error in eval(expr, envir, enclos): object 'a' not found
+```
+
+We can tell `eval` to use the calling environment for trying to find the missing variables using the `enclos` argument.
+
+
+```r
+rm(list = ls())
+a_dataframe <- data.frame(a = 1:5, b = 5:1, z = 1:5)
+
+subset2 <- function(x, condition){
+    condition_exp <- substitute(condition)
+    print(condition_exp)
+    condition_evaluated <- eval(condition_exp, envir = x, enclos = parent.frame())
+    x[condition_evaluated,]
+}
+
+x <- 4
+subset2(a_dataframe, a == x)
+## a == x
+##   a b z
+## 4 4 2 4
+```
+
+### Scoping with `parent.frame()`
+
+See which environmnet is used for `env` when using the default value or setting the env specifically (always using `parent.frame()`).
+
+
+```r
+f <- function(envir = parent.frame()){
+    print(envir)
+}
+
+g <- function(){
+    print(environment())
+    f()
+}
+#When using the default setting env will
+#point to the calling environment, in this case
+#the environment associated with the function g
+#calling f()
+g()
+## <environment: 0x7fce3ccbcf88>
+## <environment: 0x7fce3ccbcf88>
+
+
+#When explicitly setting env will
+#point to the calling environment, in this case
+#the environment associated with the env 
+#calling the function g1()
+g1 <- function(){
+    print(environment())
+    f(envir = parent.frame())
+}
+
+g1()
+## <environment: 0x7fce3cdcc2a0>
+## <environment: R_GlobalEnv>
+```
+
 
 # References
 [1] "Advanced R" by Hadley Wickham, ["Non-standard evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter 

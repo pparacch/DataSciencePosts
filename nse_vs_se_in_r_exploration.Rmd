@@ -17,7 +17,7 @@ The content of this blog is based on notes collected and experiments performed w
 
     "In most programming languages, you can only access the values of a function’s arguments. In R, you can also access the code used to compute them. This makes it possible to evaluate code in non-standard ways: to use what is known as non-standard evaluation, or NSE for short. NSE is particularly useful for functions when doing interactive data analysis because it can dramatically reduce the amount of typing." [1]
 
-NSE is about accessing the code used to specify any valid R expression and used it in a non standard way.
+__NSE__ is about __accessing the code used to specify any valid R expression__ and used it in a __non standard way__.
 
 ## How to to capture expression
 
@@ -167,7 +167,7 @@ pairwise.t.test
 DNAME <- paste(deparse(substitute(x)), "and", deparse(substitute(g)))
 ```
 
-## The `subset()` a NSE application
+## `subset()`, an example of NSE
 
 The `subset()` function returns a subset of a provided dataframe (not only) which meet the provided conditions, minimizing the typing involved. See example below
 
@@ -271,6 +271,109 @@ subset2 <- function(x, condition){
 }
 
 subset2(a_dataframe, a >=2)
+```
+
+## Scoping issues when using NSE
+
+When using NSE, using expressions instead of values, things can go wrongs in different ways. When evaluating an expression using `eval` the look up for variables is done in
+
+* (first) `envir`, the environment where `expr` is going to be evaluated.  
+* if not found in `envir` the search will continue in `enclos` (enclosure).
+
+Some examples when scoping goes wrong ....
+
+
+```{r collapse=T, error=TRUE}
+rm(list = ls())
+
+a_dataframe <- data.frame(a = 1:5, b = 5:1, z = 1:5)
+
+subset2 <- function(x, condition){
+    condition_exp <- substitute(condition)
+    print(condition_exp)
+    condition_evaluated <- eval(condition_exp, envir = x)
+    x[condition_evaluated,]
+}
+
+#################
+#A simple example
+subset2(a_dataframe, a == 4)
+
+#################
+#Another simple example that should give
+#the same result as before
+
+#When evaluating the expression y is not defined in the
+#dataframe (envir), so it will be searched in the enclosure
+#the calling environment when using a dataframe (as env)
+#so y is found and the expression connected with the condition
+#is evaluated.
+y <- 4
+subset2(a_dataframe, a == y)
+
+#################
+#Another simple example that should give
+#the same result as before
+
+#this time x unfortunately is defined as one of the arguments of the function
+#so the wrong value is picked up when the expression connected with the condition
+#is evaluate. x is actually the dataframe itself
+x <- 4
+subset2(a_dataframe, a == x)
+
+#another similar example
+#with a more criptical error
+condition <- 4
+subset2(a_dataframe, a == condition)
+```
+
+We can tell `eval` to use the calling environment for trying to find the missing variables using the `enclos` argument.
+
+```{r collapse=T, error=TRUE}
+rm(list = ls())
+a_dataframe <- data.frame(a = 1:5, b = 5:1, z = 1:5)
+
+subset2 <- function(x, condition){
+    condition_exp <- substitute(condition)
+    print(condition_exp)
+    condition_evaluated <- eval(condition_exp, envir = x, enclos = parent.frame())
+    x[condition_evaluated,]
+}
+
+x <- 4
+subset2(a_dataframe, a == x)
+```
+
+### Scoping with `parent.frame()`
+
+See which environmnet is used for `env` when using the default value or setting the env specifically (always using `parent.frame()`).
+
+```{r collapse=TRUE}
+f <- function(envir = parent.frame()){
+    print(envir)
+}
+
+g <- function(){
+    print(environment())
+    f()
+}
+#When using the default setting env will
+#point to the calling environment, in this case
+#the environment associated with the function g
+#calling f()
+g()
+
+
+#When explicitly setting env will
+#point to the calling environment, in this case
+#the environment associated with the env 
+#calling the function g1()
+g1 <- function(){
+    print(environment())
+    f(envir = parent.frame())
+}
+
+g1()
 ```
 
 

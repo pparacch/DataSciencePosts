@@ -131,8 +131,12 @@ $(document).ready(function () {
 <li><a href="#how-to-use-captured-expressions">How to use captured expressions</a><ul>
 <li><a href="#some-applications">Some applications</a></li>
 </ul></li>
-<li><a href="#the-subset-a-nse-application">The <code>subset()</code> a NSE application</a><ul>
+<li><a href="#subset-an-example-of-nse"><code>subset()</code>, an example of NSE</a><ul>
 <li><a href="#the-eval-function">The <code>eval()</code> function</a></li>
+<li><a href="#a-simple-subset-implementation">A simple <code>subset</code> implementation</a></li>
+</ul></li>
+<li><a href="#scoping-issues-when-using-nse">Scoping issues when using NSE</a><ul>
+<li><a href="#scoping-with-parent.frame">Scoping with <code>parent.frame()</code></a></li>
 </ul></li>
 <li><a href="#references">References</a></li>
 </ul>
@@ -142,7 +146,7 @@ $(document).ready(function () {
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
 <pre><code>&quot;In most programming languages, you can only access the values of a function’s arguments. In R, you can also access the code used to compute them. This makes it possible to evaluate code in non-standard ways: to use what is known as non-standard evaluation, or NSE for short. NSE is particularly useful for functions when doing interactive data analysis because it can dramatically reduce the amount of typing.&quot; [1]</code></pre>
-<p>NSE is about accessing the code used to specify any valid R expression and used it in a non standard way.</p>
+<p><strong>NSE</strong> is about <strong>accessing the code used to specify any valid R expression</strong> and used it in a <strong>non standard way</strong>.</p>
 </div>
 <div id="how-to-to-capture-expression" class="section level2">
 <h2>How to to capture expression</h2>
@@ -288,8 +292,8 @@ pairwise.t.test
 DNAME &lt;- paste(deparse(substitute(x)), &quot;and&quot;, deparse(substitute(g)))</code></pre>
 </div>
 </div>
-<div id="the-subset-a-nse-application" class="section level2">
-<h2>The <code>subset()</code> a NSE application</h2>
+<div id="subset-an-example-of-nse" class="section level2">
+<h2><code>subset()</code>, an example of NSE</h2>
 <p>The <code>subset()</code> function returns a subset of a provided dataframe (not only) which meet the provided conditions, minimizing the typing involved. See example below</p>
 <pre class="r"><code>a_dataframe &lt;- data.frame(a = 1:5, b = 5:1, c = c(6,7,8,9,10))
 a_dataframe
@@ -340,7 +344,7 @@ a_dataframe[a_dataframe$a &gt;=4,]
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## &lt;bytecode: 0x7fc4b0d3c8d8&gt;
+## &lt;bytecode: 0x7fce3912cd18&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <div id="the-eval-function" class="section level3">
 <h3>The <code>eval()</code> function</h3>
@@ -406,6 +410,145 @@ eval(a, envir = a_dataframe)
 #an error is thrown
 eval(z, envir = a_dataframe)
 ## Error in eval(z, envir = a_dataframe): object 'z' not found</code></pre>
+</div>
+<div id="a-simple-subset-implementation" class="section level3">
+<h3>A simple <code>subset</code> implementation</h3>
+<pre class="r"><code>rm(list = ls())
+a_dataframe &lt;- data.frame(a = 1:5, b = 5:1, c = c(6,7,8,9,10), z = 1:5)
+
+subset2 &lt;- function(x, condition){
+    condition_exp &lt;- substitute(condition)
+    condition_evaluated &lt;- eval(condition_exp, envir = x)
+    x[condition_evaluated,]
+}
+
+subset2(a_dataframe, a &gt;=2)
+##   a b  c z
+## 2 2 4  7 2
+## 3 3 3  8 3
+## 4 4 2  9 4
+## 5 5 1 10 5</code></pre>
+</div>
+</div>
+<div id="scoping-issues-when-using-nse" class="section level2">
+<h2>Scoping issues when using NSE</h2>
+<p>When using NSE, using expressions instead of values, things can go wrongs in different ways. When evaluating an expression using <code>eval</code> the look up for variables is done in</p>
+<ul>
+<li>(first) <code>envir</code>, the environment where <code>expr</code> is going to be evaluated.<br />
+</li>
+<li>if not found in <code>envir</code> the search will continue in <code>enclos</code> (enclosure).</li>
+</ul>
+<p>Some examples when scoping goes wrong ….</p>
+<pre class="r"><code>rm(list = ls())
+
+a_dataframe &lt;- data.frame(a = 1:5, b = 5:1, z = 1:5)
+
+subset2 &lt;- function(x, condition){
+    condition_exp &lt;- substitute(condition)
+    print(condition_exp)
+    condition_evaluated &lt;- eval(condition_exp, envir = x)
+    x[condition_evaluated,]
+}
+
+#################
+#A simple example
+subset2(a_dataframe, a == 4)
+## a == 4
+##   a b z
+## 4 4 2 4
+
+#################
+#Another simple example that should give
+#the same result as before
+
+#When evaluating the expression y is not defined in the
+#dataframe (envir), so it will be searched in the enclosure
+#the calling environment when using a dataframe (as env)
+#so y is found and the expression connected with the condition
+#is evaluated.
+y &lt;- 4
+subset2(a_dataframe, a == y)
+## a == y
+##   a b z
+## 4 4 2 4
+
+#################
+#Another simple example that should give
+#the same result as before
+
+#this time x unfortunately is defined as one of the arguments of the function
+#so the wrong value is picked up when the expression connected with the condition
+#is evaluate. x is actually the dataframe itself
+x &lt;- 4
+subset2(a_dataframe, a == x)
+## a == x
+##       a  b  z
+## 1     1  5  1
+## 2     2  4  2
+## 3     3  3  3
+## 4     4  2  4
+## 5     5  1  5
+## NA   NA NA NA
+## NA.1 NA NA NA
+## NA.2 NA NA NA
+## NA.3 NA NA NA
+## NA.4 NA NA NA
+## NA.5 NA NA NA
+
+#another similar example
+#with a more criptical error
+condition &lt;- 4
+subset2(a_dataframe, a == condition)
+## a == condition
+## Error in eval(expr, envir, enclos): object 'a' not found</code></pre>
+<p>We can tell <code>eval</code> to use the calling environment for trying to find the missing variables using the <code>enclos</code> argument.</p>
+<pre class="r"><code>rm(list = ls())
+a_dataframe &lt;- data.frame(a = 1:5, b = 5:1, z = 1:5)
+
+subset2 &lt;- function(x, condition){
+    condition_exp &lt;- substitute(condition)
+    print(condition_exp)
+    condition_evaluated &lt;- eval(condition_exp, envir = x, enclos = parent.frame())
+    x[condition_evaluated,]
+}
+
+x &lt;- 4
+subset2(a_dataframe, a == x)
+## a == x
+##   a b z
+## 4 4 2 4</code></pre>
+<div id="scoping-with-parent.frame" class="section level3">
+<h3>Scoping with <code>parent.frame()</code></h3>
+<p>See which environmnet is used for <code>env</code> when using the default value or setting the env specifically (always using <code>parent.frame()</code>).</p>
+<pre class="r"><code>f &lt;- function(envir = parent.frame()){
+    print(envir)
+}
+
+g &lt;- function(){
+    print(environment())
+    f()
+}
+#When using the default setting env will
+#point to the calling environment, in this case
+#the environment associated with the function g
+#calling f()
+g()
+## &lt;environment: 0x7fce3ccbcf88&gt;
+## &lt;environment: 0x7fce3ccbcf88&gt;
+
+
+#When explicitly setting env will
+#point to the calling environment, in this case
+#the environment associated with the env 
+#calling the function g1()
+g1 &lt;- function(){
+    print(environment())
+    f(envir = parent.frame())
+}
+
+g1()
+## &lt;environment: 0x7fce3cdcc2a0&gt;
+## &lt;environment: R_GlobalEnv&gt;</code></pre>
 </div>
 </div>
 <div id="references" class="section level1">
