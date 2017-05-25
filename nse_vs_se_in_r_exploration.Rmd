@@ -1,0 +1,278 @@
+---
+title: "Non-Standard Evaluation in R"
+author: "Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`"
+output: 
+  html_document: 
+    keep_md: yes
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The content of this blog is based on notes collected and experiments performed while reading the __["Non-standard Evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1]. The supporting [R markdown TBD]() used for generating these notes/ experiments can be find in the following [repository](https://github.com/pparacch/DataSciencePosts).
+
+## Introduction
+
+    "In most programming languages, you can only access the values of a function’s arguments. In R, you can also access the code used to compute them. This makes it possible to evaluate code in non-standard ways: to use what is known as non-standard evaluation, or NSE for short. NSE is particularly useful for functions when doing interactive data analysis because it can dramatically reduce the amount of typing." [1]
+
+NSE is about accessing the code used to specify any valid R expression and used it in a non standard way.
+
+## How to to capture expression
+
+### The `substitute()` function
+
+The `substitute(exp, env)` function in the `base` package is what makes NSE possible.
+
+From `?substitute`
+
+    "substitute returns the parse tree for the (unevaluated) expression expr, substituting any variables bound in env. ... [substitution] If it is an ordinary variable, its value is substituted, unless env is .GlobalEnv in which case the symbol is left unchanged." R Documentation
+
+Something to note about this function   
+
+    "... substitute() works because function arguments are represented by a special type of object called a promise. A promise captures the expression needed to compute the value and the environment in which to compute it. You’re not normally aware of promises because the first time you access a promise its code is evaluated in its environment, yielding a value." [1]
+
+```{r collapse=TRUE}
+#A simple function using SE
+g <- function(x){
+    x
+}
+
+#The same simple function using the substitute() function
+f <- function(x){
+    substitute(x)
+}
+g(1:10)
+f(1:10)
+
+x <- 10
+g(x)
+
+f(x)
+typeof(f(x))
+
+x <- 10
+y <- 13
+g(x + y^2)
+
+f(x + y^2)
+typeof(f(x + y^2))
+```
+
+```{r collapse=TRUE}
+#Create a new environmnet
+#create some bindings in the env
+my_env <- new.env()
+my_env$a = 1
+my_env$b = 2
+my_env$c = 3
+
+#substituting any variables bound in env
+substitute((a+x) + (b+y) + (c+z), my_env)
+```
+
+```{r collapse=TRUE}
+#A tricky situation...
+
+f <- function(x){
+    substitute((x))
+}
+g <- function(x){
+    #When calling f() x is the expression passed on
+    #not its value.
+    deparse(f(x))
+}
+
+g(1:10)
+g(x)
+g(x + y^2)
+```
+
+### The `quote()` function
+
+Another way to capture expression is using the `quote()` function in the `base` package
+
+    "simply returns its argument. The argument is not evaluated and can be any R expression." R Documentation
+
+This function capture the provided expression as is, without performing any transformations.
+
+```{r collapse=TRUE}
+#The same simple function using the substitute() function
+f <- function(x){
+    quote(x)
+}
+f(1:10)
+typeof(f(x))
+
+f(x)
+typeof(f(x))
+
+f(x + y^2)
+typeof(f(x + y^2))
+```
+
+## How to use captured expressions
+
+`The `deparse()` function is often used with the `substitute()` function. It turns unevaluated expressions into character strings.
+
+```{r collapse = TRUE}
+f <- function(x){
+    deparse(substitute(x))
+}
+
+f(x)
+typeof(f(x))
+
+f(x + y^2)
+typeof(f(x + y^2))
+```
+
+When using `deparse()` function, one argument to be aware is `width_cutoff` cause it can gives unexpected results. It defines the cut at which a line-breaking is tried. See example below
+
+```{r collpase}
+f <- function(x){
+    deparse(substitute(x), width.cutoff = 20L)
+}
+
+f(a + b + c + d + e + f + g + h + i + j + k + l + m +
+  n + o + p + q + r + s + t + u + v + w + x + y + z)
+
+#A possible way to remove the possible splitting of the expression in more than
+#one line is to write a wrapper around it 
+g <- function(x){
+    paste(gsub("^\\s+|\\s+$", "", deparse(substitute(x), width.cutoff = 20L)), collapse = " ")
+}
+
+g(a + b + c + d + e + f + g + h + i + j + k + l + m +
+  n + o + p + q + r + s + t + u + v + w + x + y + z)
+```
+
+### Some applications
+
+```{r eval=FALSE}
+#print out the implementing code
+as.Date.default
+
+#to create an error message (from the code)
+stop(gettextf("do not know how to convert '%s' to class %s", 
+        deparse(substitute(x)), dQuote("Date")), domain = NA)
+```
+
+```{r eval=FALSE}
+#print out the implementing code
+pairwise.t.test
+
+#to create the data name to be returned 
+DNAME <- paste(deparse(substitute(x)), "and", deparse(substitute(g)))
+```
+
+## The `subset()` a NSE application
+
+The `subset()` function returns a subset of a provided dataframe (not only) which meet the provided conditions, minimizing the typing involved. See example below
+
+```{r collapse=TRUE}
+a_dataframe <- data.frame(a = 1:5, b = 5:1, c = c(6,7,8,9,10))
+a_dataframe
+
+#lets select obs (row) where a is greater or equal to
+subset(a_dataframe, a >=4)
+
+#equivalent to the SE
+a_dataframe[a_dataframe$a >=4,]
+```
+
+The implementation of the `subset` function for a dataframe can be found below
+
+```{r collapse=TRUE}
+getAnywhere(subset.data.frame())
+```
+
+### The `eval()` function
+
+The `eval()` function is used to evaluate an R expression in a specified environment. By default the calling environment (`envir = parent.frame()`) is used when evaluating an expression (if not esplicitly provided)
+
+```{r collapse=TRUE}
+#clean up current environment
+rm(list = ls())
+
+#variable x is created and set to 1 in the current env
+eval(quote(x <- 1))
+eval(quote(x))
+```
+
+```{r collapse=TRUE, error=TRUE}
+#clean up current environment
+rm(list = ls())
+
+#If x is not found (current environment on) then
+#an error is thrown
+eval(quote(x))
+```
+
+```{r collapse=TRUE}
+#nested eval() with nested quote()
+#each eval removes one quote level.
+eval(quote(quote(quote(quote(2+2)))))
+eval(quote(quote(quote(2+2))))
+eval(eval(quote(quote(quote(2+2)))))
+eval(eval(eval(quote(quote(quote(2+2))))))
+```
+
+__Providing a specific environment (as an `environment`, a `list`, a `data.frame`) for evaluating an expression...__
+
+```{r collapse=TRUE} 
+rm(list = ls())
+
+#Env provided as a list
+x <- 10
+eval(quote(x), envir = list(x = 55))
+
+y <- "a string"
+#Env provided as an env
+my_env <- new.env()
+my_env$y <- 15
+eval(quote(y), envir = my_env)
+
+eval(quote(x), envir = data.frame(x = c(55,56,57,60)))
+```
+
+__A common mistake is to use `eval` without passing an expression...__
+
+```{r collapse=TRUE, error=TRUE}
+rm(list = ls())
+a <- 10
+a_dataframe <- data.frame(a = 1:5, b = 5:1, c = c(6,7,8,9,10), z = 1:5)
+
+#passing a R expression, envir is used to evaluate the expression
+#a (feature) is found into the dataframe
+eval(quote(a), envir = a_dataframe)
+
+#passing a variable, the current environment is used to find that value
+#a is found into the current environment (envir is not used)
+eval(a, envir = a_dataframe)
+
+#passing a variable, the current environment is used to find that value
+#z is not found into the current environment (envir is not used)
+#an error is thrown
+eval(z, envir = a_dataframe)
+```
+
+### A simple `subset` implementation
+
+```{r collapse=TRUE}
+rm(list = ls())
+a_dataframe <- data.frame(a = 1:5, b = 5:1, c = c(6,7,8,9,10), z = 1:5)
+
+subset2 <- function(x, condition){
+    condition_exp <- substitute(condition)
+    condition_evaluated <- eval(condition_exp, envir = x)
+    x[condition_evaluated,]
+}
+
+subset2(a_dataframe, a >=2)
+```
+
+
+# References
+[1] "Advanced R" by Hadley Wickham, ["Non-standard evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter 
