@@ -320,7 +320,7 @@ as.Date.default
 ##     stop(gettextf(&quot;do not know how to convert '%s' to class %s&quot;, 
 ##         deparse(substitute(x)), dQuote(&quot;Date&quot;)), domain = NA)
 ## }
-## &lt;bytecode: 0x7fec3bafb708&gt;
+## &lt;bytecode: 0x7fa764d7fad0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <p>Create some internal data structures as in <code>pairwise.t.test</code> in <code>DNAME &lt;- paste(deparse(substitute(x)), &quot;and&quot;, deparse(substitute(g)))</code> …</p>
 <pre class="r"><code>#print out the implementing code
@@ -370,7 +370,7 @@ pairwise.t.test
 ##     class(ans) &lt;- &quot;pairwise.htest&quot;
 ##     ans
 ## }
-## &lt;bytecode: 0x7fec396ce098&gt;
+## &lt;bytecode: 0x7fa763b5fa28&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 </div>
 </div>
@@ -492,7 +492,7 @@ a_dataframe[a_dataframe$a &gt;=4,]
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## &lt;bytecode: 0x7fec3b0477c0&gt;
+## &lt;bytecode: 0x7fa765748ff8&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <div id="a-simple-subset-re-implementation" class="section level4">
 <h4>A simple <code>subset()</code> re-implementation</h4>
@@ -627,8 +627,8 @@ g &lt;- function(){
 #the environment associated with the function g
 #calling f()
 g()
-## &lt;environment: 0x7fec3ac26ea0&gt;
-## &lt;environment: 0x7fec3ac26ea0&gt;
+## &lt;environment: 0x7fa768a2f0d8&gt;
+## &lt;environment: 0x7fa768a2f0d8&gt;
 
 
 #When explicitly setting env will
@@ -641,7 +641,7 @@ g1 &lt;- function(){
 }
 
 g1()
-## &lt;environment: 0x7fec3bd9b430&gt;
+## &lt;environment: 0x7fa764ea41f8&gt;
 ## &lt;environment: R_GlobalEnv&gt;</code></pre>
 </div>
 </div>
@@ -679,14 +679,14 @@ subscramble &lt;- function(x, condition){
 #a &lt;- 5:9 #Comment out to remove the error
 subscramble(a_dataframe, a &gt;= 4)
 ## [1] &quot;--&gt; subscramble (current. env, parent.frame)&quot;
-## &lt;environment: 0x7fec3911d6a8&gt;
+## &lt;environment: 0x7fa76568d6e0&gt;
 ## &lt;environment: R_GlobalEnv&gt;
 ## [1] &quot;--&gt; scramble (current. env, parent.frame)&quot;
-## &lt;environment: 0x7fec397920e8&gt;
-## &lt;environment: 0x7fec3911d6a8&gt;
+## &lt;environment: 0x7fa76568fd20&gt;
+## &lt;environment: 0x7fa76568d6e0&gt;
 ## [1] &quot;--&gt; subset2 (current. env, parent.frame)&quot;
-## &lt;environment: 0x7fec3b02e898&gt;
-## &lt;environment: 0x7fec3911d6a8&gt;
+## &lt;environment: 0x7fa765692ad0&gt;
+## &lt;environment: 0x7fa76568d6e0&gt;
 ## condition
 ## Error in eval(expr, envir, enclos): object 'a' not found
 

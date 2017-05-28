@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Acknowledgments
 
-The content of this blog is based on notes collected and experiments performed while reading the __["Non-standard Evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1]. The supporting [R markdown TBD]() used for generating these notes/ experiments can be find in the following [repository](https://github.com/pparacch/DataSciencePosts).
+The content of this blog is based on notes collected and experiments performed while reading the __["Non-standard Evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1]. The [supporting R markdown](https://github.com/pparacch/DataSciencePosts/blob/master/nse_vs_se_in_r_exploration.Rmd) used for generating these notes/ experiments can be find in the following [repository](https://github.com/pparacch/DataSciencePosts).
 
 ## Introduction
 

@@ -217,7 +217,7 @@ as.Date.default
 ##     stop(gettextf("do not know how to convert '%s' to class %s", 
 ##         deparse(substitute(x)), dQuote("Date")), domain = NA)
 ## }
-## <bytecode: 0x7fec3bafb708>
+## <bytecode: 0x7fa764d7fad0>
 ## <environment: namespace:base>
 ```
 
@@ -272,7 +272,7 @@ pairwise.t.test
 ##     class(ans) <- "pairwise.htest"
 ##     ans
 ## }
-## <bytecode: 0x7fec396ce098>
+## <bytecode: 0x7fa763b5fa28>
 ## <environment: namespace:stats>
 ```
 
@@ -424,7 +424,7 @@ getAnywhere(subset.data.frame())
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## <bytecode: 0x7fec3b0477c0>
+## <bytecode: 0x7fa765748ff8>
 ## <environment: namespace:base>
 ```
 
@@ -577,8 +577,8 @@ g <- function(){
 #the environment associated with the function g
 #calling f()
 g()
-## <environment: 0x7fec3ac26ea0>
-## <environment: 0x7fec3ac26ea0>
+## <environment: 0x7fa768a2f0d8>
+## <environment: 0x7fa768a2f0d8>
 
 
 #When explicitly setting env will
@@ -591,7 +591,7 @@ g1 <- function(){
 }
 
 g1()
-## <environment: 0x7fec3bd9b430>
+## <environment: 0x7fa764ea41f8>
 ## <environment: R_GlobalEnv>
 ```
 
@@ -632,14 +632,14 @@ subscramble <- function(x, condition){
 #a <- 5:9 #Comment out to remove the error
 subscramble(a_dataframe, a >= 4)
 ## [1] "--> subscramble (current. env, parent.frame)"
-## <environment: 0x7fec3911d6a8>
+## <environment: 0x7fa76568d6e0>
 ## <environment: R_GlobalEnv>
 ## [1] "--> scramble (current. env, parent.frame)"
-## <environment: 0x7fec397920e8>
-## <environment: 0x7fec3911d6a8>
+## <environment: 0x7fa76568fd20>
+## <environment: 0x7fa76568d6e0>
 ## [1] "--> subset2 (current. env, parent.frame)"
-## <environment: 0x7fec3b02e898>
-## <environment: 0x7fec3911d6a8>
+## <environment: 0x7fa765692ad0>
+## <environment: 0x7fa76568d6e0>
 ## condition
 ## Error in eval(expr, envir, enclos): object 'a' not found
 
