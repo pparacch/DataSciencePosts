@@ -469,78 +469,11 @@ subscramble(a_dataframe, a >= 4)
 Most functions that use NSE provide an alternative version of the function that uses SE (Standard Evaluation), this version of the functions should be used. __But__ sometimes there are functions that do not provide this alternative version so __what is the best approach in this case?__ 
 
 * Implement an alternative version to be used for SE or 
-* not use such function. 
+* Not use such function. 
 
-### The `substitute()` example
-
-`substitute()` is a function that uses NSE and does not have an alternative version to be used for SE. When using `substitute()`, the variables bound in the environment `env` are replaced in the expression using the following rules:
-
-(1) an __ordinary variable__, it's replaced by its value
-(2) a __promise__ (a function argument), it's replaced by expression associated with the promise
-(3) `...`, it's replaced by the content of `...`
-(4) lest as is.
-
-__Some examples using ordinary variables...__
-
-```{r collapse=TRUE}
-rm(list = ls())
-f <- function(){
-    a <- 1
-    b <- 2
-    #Rule 1. applied
-    substitute(a + b + z)
-}
-f()
-```
-
-```{r collapse=TRUE}
-rm(list = ls())
-f <- function(){
-    a <- quote(mpg)
-    b <- quote(disp)
-    data <- quote(mtcars)
-    #Rule 1. applied
-    substitute(lattice::xyplot(a ~ b, data = data))
-}
-f()
-```
-
-```{r collapse=TRUE}
-rm(list = ls())
-#Rule 1. applied
-substitute(a + b, env = list(a = "y"))
-substitute(a + b, env = list(a = quote(y)))
-substitute(a + b, env = list(a = quote(y())))
-substitute(a + b, env = list("+" = quote(f)))
-substitute(a + b, env = list("+" = quote(`*`)))
-```
-
-__Examples using promises (function arguments)...__
-
-```{r collapse=TRUE}
-rm(list = ls())
-f <- function(x, y, data){
-    #Rule 2. applied - working on promises
-    #A promise is replaced with an expression associated with the promise
-    substitute(lattice::xyplot(x ~ y, data = data))
-}
-
-f(mpg, disp, data = mtcars)
-```
-
-__Examples using `...`...__
-
-```{r collapse=TRUE}
-rm(list = ls())
-f <- function(x,y, ...){
-    #Rule 3. applied (together with Rule 2.)
-    substitute(lattice::xyplot(x ~ y, ...))
-}
-
-f(mpg, disp, data = mtcars, col = "red")
-```
-
-#### Adding an escape hatch
+Some usefull readings on this topic can be found in [2], [3].
 
 # References
-[1] "Advanced R" by Hadley Wickham, ["Non-standard evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter 
+[1] "Advanced R" by Hadley Wickham, ["Non-standard evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter   
+[2] Vignettes for the [`dplyr` package](https://cran.r-project.org/web/packages/dplyr/index.html), ["Non-standard evaluation"](https://cran.r-project.org/web/packages/dplyr/vignettes/nse.html)  
+[3] Vignettes for the [`lazyeval` package](https://cran.r-project.org/web/packages/lazyeval/index.html), ["lazyeval: a new approach to NSE"](https://cran.r-project.org/web/packages/lazyeval/vignettes/lazyeval-old.html) and ["Non-standard evaluation"](https://cran.r-project.org/web/packages/lazyeval/vignettes/lazyeval.html) 

@@ -217,7 +217,7 @@ as.Date.default
 ##     stop(gettextf("do not know how to convert '%s' to class %s", 
 ##         deparse(substitute(x)), dQuote("Date")), domain = NA)
 ## }
-## <bytecode: 0x7f9cd3e59228>
+## <bytecode: 0x7fec3bafb708>
 ## <environment: namespace:base>
 ```
 
@@ -272,7 +272,7 @@ pairwise.t.test
 ##     class(ans) <- "pairwise.htest"
 ##     ans
 ## }
-## <bytecode: 0x7f9cd3984b08>
+## <bytecode: 0x7fec396ce098>
 ## <environment: namespace:stats>
 ```
 
@@ -424,7 +424,7 @@ getAnywhere(subset.data.frame())
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## <bytecode: 0x7f9cd32d33c8>
+## <bytecode: 0x7fec3b0477c0>
 ## <environment: namespace:base>
 ```
 
@@ -577,8 +577,8 @@ g <- function(){
 #the environment associated with the function g
 #calling f()
 g()
-## <environment: 0x7f9cd372a520>
-## <environment: 0x7f9cd372a520>
+## <environment: 0x7fec3ac26ea0>
+## <environment: 0x7fec3ac26ea0>
 
 
 #When explicitly setting env will
@@ -591,7 +591,7 @@ g1 <- function(){
 }
 
 g1()
-## <environment: 0x7f9cd40d2e70>
+## <environment: 0x7fec3bd9b430>
 ## <environment: R_GlobalEnv>
 ```
 
@@ -632,14 +632,14 @@ subscramble <- function(x, condition){
 #a <- 5:9 #Comment out to remove the error
 subscramble(a_dataframe, a >= 4)
 ## [1] "--> subscramble (current. env, parent.frame)"
-## <environment: 0x7f9cd3072e70>
+## <environment: 0x7fec3911d6a8>
 ## <environment: R_GlobalEnv>
 ## [1] "--> scramble (current. env, parent.frame)"
-## <environment: 0x7f9cd3074ce8>
-## <environment: 0x7f9cd3072e70>
+## <environment: 0x7fec397920e8>
+## <environment: 0x7fec3911d6a8>
 ## [1] "--> subset2 (current. env, parent.frame)"
-## <environment: 0x7f9cd3120098>
-## <environment: 0x7f9cd3072e70>
+## <environment: 0x7fec3b02e898>
+## <environment: 0x7fec3911d6a8>
 ## condition
 ## Error in eval(expr, envir, enclos): object 'a' not found
 
@@ -656,97 +656,14 @@ subscramble(a_dataframe, a >= 4)
 
 ## How to use NSE functions within your code
 
-Most functions that use NSE provide an alternative version of the function that uses SE (Standard Evaluation), this version of the functions should be used.
-
-__But__ sometimes there are functions that do not provide this alternative version so __what is the best approach in this case?__ 
+Most functions that use NSE provide an alternative version of the function that uses SE (Standard Evaluation), this version of the functions should be used. __But__ sometimes there are functions that do not provide this alternative version so __what is the best approach in this case?__ 
 
 * Implement an alternative version to be used for SE or 
-* not use such function. 
+* Not use such function. 
 
-### The `substitute()` example
-
-`substitute()` is a function that uses NSE and does not have an alternative version to be used for SE. When using `substitute()`, the variables bound in the environment `env` are replaced in the expression using the following rules:
-
-(1) an __ordinary variable__, it's replaced by its value
-(2) a __promise__ (a function argument), it's replaced by expression associated with the promise
-(3) `...`, it's replaced by the content of `...`
-(4) lest as is.
-
-__Some examples using ordinary variables...__
-
-
-```r
-rm(list = ls())
-f <- function(){
-    a <- 1
-    b <- 2
-    #Rule 1. applied
-    substitute(a + b + z)
-}
-f()
-## 1 + 2 + z
-```
-
-
-```r
-rm(list = ls())
-f <- function(){
-    a <- quote(mpg)
-    b <- quote(disp)
-    data <- quote(mtcars)
-    #Rule 1. applied
-    substitute(lattice::xyplot(a ~ b, data = data))
-}
-f()
-## lattice::xyplot(mpg ~ disp, data = mtcars)
-```
-
-
-```r
-rm(list = ls())
-#Rule 1. applied
-substitute(a + b, env = list(a = "y"))
-## "y" + b
-substitute(a + b, env = list(a = quote(y)))
-## y + b
-substitute(a + b, env = list(a = quote(y())))
-## y() + b
-substitute(a + b, env = list("+" = quote(f)))
-## f(a, b)
-substitute(a + b, env = list("+" = quote(`*`)))
-## a * b
-```
-
-__Examples using promises (function arguments)...__
-
-
-```r
-rm(list = ls())
-f <- function(x, y, data){
-    #Rule 2. applied - working on promises
-    #A promise is replaced with an expression associated with the promise
-    substitute(lattice::xyplot(x ~ y, data = data))
-}
-
-f(mpg, disp, data = mtcars)
-## lattice::xyplot(mpg ~ disp, data = mtcars)
-```
-
-__Examples using `...`...__
-
-
-```r
-rm(list = ls())
-f <- function(x,y, ...){
-    #Rule 3. applied (together with Rule 2.)
-    substitute(lattice::xyplot(x ~ y, ...))
-}
-
-f(mpg, disp, data = mtcars, col = "red")
-## lattice::xyplot(mpg ~ disp, data = mtcars, col = "red")
-```
-
-#### Adding an escape hatch
+Some usefull readings on this topic can be found in [2], [3].
 
 # References
-[1] "Advanced R" by Hadley Wickham, ["Non-standard evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter 
+[1] "Advanced R" by Hadley Wickham, ["Non-standard evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter   
+[2] Vignettes for the [`dplyr` package](https://cran.r-project.org/web/packages/dplyr/index.html), ["Non-standard evaluation"](https://cran.r-project.org/web/packages/dplyr/vignettes/nse.html)  
+[3] Vignettes for the [`lazyeval` package](https://cran.r-project.org/web/packages/lazyeval/index.html), ["lazyeval: a new approach to NSE"](https://cran.r-project.org/web/packages/lazyeval/vignettes/lazyeval-old.html) and ["Non-standard evaluation"](https://cran.r-project.org/web/packages/lazyeval/vignettes/lazyeval.html) 

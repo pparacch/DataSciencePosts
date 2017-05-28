@@ -144,11 +144,7 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#calling-nse-functions-from-other-functions">Calling NSE functions from other functions</a></li>
 </ul></li>
-<li><a href="#how-to-use-nse-functions-within-your-code">How to use NSE functions within your code</a><ul>
-<li><a href="#the-substitute-example">The <code>substitute()</code> example</a><ul>
-<li><a href="#adding-an-escape-hatch">Adding an escape hatch</a></li>
-</ul></li>
-</ul></li>
+<li><a href="#how-to-use-nse-functions-within-your-code">How to use NSE functions within your code</a></li>
 <li><a href="#references">References</a></li>
 </ul>
 </div>
@@ -324,7 +320,7 @@ as.Date.default
 ##     stop(gettextf(&quot;do not know how to convert '%s' to class %s&quot;, 
 ##         deparse(substitute(x)), dQuote(&quot;Date&quot;)), domain = NA)
 ## }
-## &lt;bytecode: 0x7f9cd3e59228&gt;
+## &lt;bytecode: 0x7fec3bafb708&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <p>Create some internal data structures as in <code>pairwise.t.test</code> in <code>DNAME &lt;- paste(deparse(substitute(x)), &quot;and&quot;, deparse(substitute(g)))</code> …</p>
 <pre class="r"><code>#print out the implementing code
@@ -374,7 +370,7 @@ pairwise.t.test
 ##     class(ans) &lt;- &quot;pairwise.htest&quot;
 ##     ans
 ## }
-## &lt;bytecode: 0x7f9cd3984b08&gt;
+## &lt;bytecode: 0x7fec396ce098&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 </div>
 </div>
@@ -496,7 +492,7 @@ a_dataframe[a_dataframe$a &gt;=4,]
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## &lt;bytecode: 0x7f9cd32d33c8&gt;
+## &lt;bytecode: 0x7fec3b0477c0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <div id="a-simple-subset-re-implementation" class="section level4">
 <h4>A simple <code>subset()</code> re-implementation</h4>
@@ -631,8 +627,8 @@ g &lt;- function(){
 #the environment associated with the function g
 #calling f()
 g()
-## &lt;environment: 0x7f9cd372a520&gt;
-## &lt;environment: 0x7f9cd372a520&gt;
+## &lt;environment: 0x7fec3ac26ea0&gt;
+## &lt;environment: 0x7fec3ac26ea0&gt;
 
 
 #When explicitly setting env will
@@ -645,7 +641,7 @@ g1 &lt;- function(){
 }
 
 g1()
-## &lt;environment: 0x7f9cd40d2e70&gt;
+## &lt;environment: 0x7fec3bd9b430&gt;
 ## &lt;environment: R_GlobalEnv&gt;</code></pre>
 </div>
 </div>
@@ -683,14 +679,14 @@ subscramble &lt;- function(x, condition){
 #a &lt;- 5:9 #Comment out to remove the error
 subscramble(a_dataframe, a &gt;= 4)
 ## [1] &quot;--&gt; subscramble (current. env, parent.frame)&quot;
-## &lt;environment: 0x7f9cd3072e70&gt;
+## &lt;environment: 0x7fec3911d6a8&gt;
 ## &lt;environment: R_GlobalEnv&gt;
 ## [1] &quot;--&gt; scramble (current. env, parent.frame)&quot;
-## &lt;environment: 0x7f9cd3074ce8&gt;
-## &lt;environment: 0x7f9cd3072e70&gt;
+## &lt;environment: 0x7fec397920e8&gt;
+## &lt;environment: 0x7fec3911d6a8&gt;
 ## [1] &quot;--&gt; subset2 (current. env, parent.frame)&quot;
-## &lt;environment: 0x7f9cd3120098&gt;
-## &lt;environment: 0x7f9cd3072e70&gt;
+## &lt;environment: 0x7fec3b02e898&gt;
+## &lt;environment: 0x7fec3911d6a8&gt;
 ## condition
 ## Error in eval(expr, envir, enclos): object 'a' not found
 
@@ -705,80 +701,18 @@ subscramble(a_dataframe, a &gt;= 4)
 </div>
 <div id="how-to-use-nse-functions-within-your-code" class="section level2">
 <h2>How to use NSE functions within your code</h2>
-<p>Most functions that use NSE provide an alternative version of the function that uses SE (Standard Evaluation), this version of the functions should be used.</p>
-<p><strong>But</strong> sometimes there are functions that do not provide this alternative version so <strong>what is the best approach in this case?</strong></p>
+<p>Most functions that use NSE provide an alternative version of the function that uses SE (Standard Evaluation), this version of the functions should be used. <strong>But</strong> sometimes there are functions that do not provide this alternative version so <strong>what is the best approach in this case?</strong></p>
 <ul>
 <li>Implement an alternative version to be used for SE or</li>
-<li>not use such function.</li>
+<li>Not use such function.</li>
 </ul>
-<div id="the-substitute-example" class="section level3">
-<h3>The <code>substitute()</code> example</h3>
-<p><code>substitute()</code> is a function that uses NSE and does not have an alternative version to be used for SE. When using <code>substitute()</code>, the variables bound in the environment <code>env</code> are replaced in the expression using the following rules:</p>
-<ol style="list-style-type: decimal">
-<li>an <strong>ordinary variable</strong>, it’s replaced by its value</li>
-<li>a <strong>promise</strong> (a function argument), it’s replaced by expression associated with the promise</li>
-<li><code>...</code>, it’s replaced by the content of <code>...</code></li>
-<li>lest as is.</li>
-</ol>
-<p><strong>Some examples using ordinary variables…</strong></p>
-<pre class="r"><code>rm(list = ls())
-f &lt;- function(){
-    a &lt;- 1
-    b &lt;- 2
-    #Rule 1. applied
-    substitute(a + b + z)
-}
-f()
-## 1 + 2 + z</code></pre>
-<pre class="r"><code>rm(list = ls())
-f &lt;- function(){
-    a &lt;- quote(mpg)
-    b &lt;- quote(disp)
-    data &lt;- quote(mtcars)
-    #Rule 1. applied
-    substitute(lattice::xyplot(a ~ b, data = data))
-}
-f()
-## lattice::xyplot(mpg ~ disp, data = mtcars)</code></pre>
-<pre class="r"><code>rm(list = ls())
-#Rule 1. applied
-substitute(a + b, env = list(a = &quot;y&quot;))
-## &quot;y&quot; + b
-substitute(a + b, env = list(a = quote(y)))
-## y + b
-substitute(a + b, env = list(a = quote(y())))
-## y() + b
-substitute(a + b, env = list(&quot;+&quot; = quote(f)))
-## f(a, b)
-substitute(a + b, env = list(&quot;+&quot; = quote(`*`)))
-## a * b</code></pre>
-<p><strong>Examples using promises (function arguments)…</strong></p>
-<pre class="r"><code>rm(list = ls())
-f &lt;- function(x, y, data){
-    #Rule 2. applied - working on promises
-    #A promise is replaced with an expression associated with the promise
-    substitute(lattice::xyplot(x ~ y, data = data))
-}
-
-f(mpg, disp, data = mtcars)
-## lattice::xyplot(mpg ~ disp, data = mtcars)</code></pre>
-<p><strong>Examples using <code>...</code>…</strong></p>
-<pre class="r"><code>rm(list = ls())
-f &lt;- function(x,y, ...){
-    #Rule 3. applied (together with Rule 2.)
-    substitute(lattice::xyplot(x ~ y, ...))
-}
-
-f(mpg, disp, data = mtcars, col = &quot;red&quot;)
-## lattice::xyplot(mpg ~ disp, data = mtcars, col = &quot;red&quot;)</code></pre>
-<div id="adding-an-escape-hatch" class="section level4">
-<h4>Adding an escape hatch</h4>
-</div>
-</div>
+<p>Some usefull readings on this topic can be found in [2], [3].</p>
 </div>
 <div id="references" class="section level1">
 <h1>References</h1>
-<p>[1] “Advanced R” by Hadley Wickham, <a href="http://adv-r.had.co.nz/Computing-on-the-language.html">“Non-standard evaluation”</a> chapter</p>
+<p>[1] “Advanced R” by Hadley Wickham, <a href="http://adv-r.had.co.nz/Computing-on-the-language.html">“Non-standard evaluation”</a> chapter<br />
+[2] Vignettes for the <a href="https://cran.r-project.org/web/packages/dplyr/index.html"><code>dplyr</code> package</a>, <a href="https://cran.r-project.org/web/packages/dplyr/vignettes/nse.html">“Non-standard evaluation”</a><br />
+[3] Vignettes for the <a href="https://cran.r-project.org/web/packages/lazyeval/index.html"><code>lazyeval</code> package</a>, <a href="https://cran.r-project.org/web/packages/lazyeval/vignettes/lazyeval-old.html">“lazyeval: a new approach to NSE”</a> and <a href="https://cran.r-project.org/web/packages/lazyeval/vignettes/lazyeval.html">“Non-standard evaluation”</a></p>
 </div>
 
 
