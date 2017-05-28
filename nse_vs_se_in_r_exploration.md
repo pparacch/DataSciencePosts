@@ -11,7 +11,7 @@ Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`
 
 ## Acknowledgments
 
-The content of this blog is based on notes collected and experiments performed while reading the __["Non-standard Evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1]. The supporting [R markdown TBD]() used for generating these notes/ experiments can be find in the following [repository](https://github.com/pparacch/DataSciencePosts).
+The content of this blog is based on notes collected and experiments performed while reading the __["Non-standard Evaluation"](http://adv-r.had.co.nz/Computing-on-the-language.html) chapter__ in [__"Advanced R"__](http://adv-r.had.co.nz/) by __Hadley Wickham__ [1]. The [supporting R markdown](https://github.com/pparacch/DataSciencePosts/blob/master/nse_vs_se_in_r_exploration.Rmd) used for generating these notes/ experiments can be find in the following [repository](https://github.com/pparacch/DataSciencePosts).
 
 ## Introduction
 
@@ -217,7 +217,7 @@ as.Date.default
 ##     stop(gettextf("do not know how to convert '%s' to class %s", 
 ##         deparse(substitute(x)), dQuote("Date")), domain = NA)
 ## }
-## <bytecode: 0x7fa764d7fad0>
+## <bytecode: 0x7fa8b6eba4d0>
 ## <environment: namespace:base>
 ```
 
@@ -272,7 +272,7 @@ pairwise.t.test
 ##     class(ans) <- "pairwise.htest"
 ##     ans
 ## }
-## <bytecode: 0x7fa763b5fa28>
+## <bytecode: 0x7fa8b6e02a28>
 ## <environment: namespace:stats>
 ```
 
@@ -424,7 +424,7 @@ getAnywhere(subset.data.frame())
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## <bytecode: 0x7fa765748ff8>
+## <bytecode: 0x7fa8b845e9f8>
 ## <environment: namespace:base>
 ```
 
@@ -577,8 +577,8 @@ g <- function(){
 #the environment associated with the function g
 #calling f()
 g()
-## <environment: 0x7fa768a2f0d8>
-## <environment: 0x7fa768a2f0d8>
+## <environment: 0x7fa8ba8cccd8>
+## <environment: 0x7fa8ba8cccd8>
 
 
 #When explicitly setting env will
@@ -591,7 +591,7 @@ g1 <- function(){
 }
 
 g1()
-## <environment: 0x7fa764ea41f8>
+## <environment: 0x7fa8b81341f8>
 ## <environment: R_GlobalEnv>
 ```
 
@@ -632,14 +632,14 @@ subscramble <- function(x, condition){
 #a <- 5:9 #Comment out to remove the error
 subscramble(a_dataframe, a >= 4)
 ## [1] "--> subscramble (current. env, parent.frame)"
-## <environment: 0x7fa76568d6e0>
+## <environment: 0x7fa8b82b7ae0>
 ## <environment: R_GlobalEnv>
 ## [1] "--> scramble (current. env, parent.frame)"
-## <environment: 0x7fa76568fd20>
-## <environment: 0x7fa76568d6e0>
+## <environment: 0x7fa8b81ab120>
+## <environment: 0x7fa8b82b7ae0>
 ## [1] "--> subset2 (current. env, parent.frame)"
-## <environment: 0x7fa765692ad0>
-## <environment: 0x7fa76568d6e0>
+## <environment: 0x7fa8b83c82d0>
+## <environment: 0x7fa8b82b7ae0>
 ## condition
 ## Error in eval(expr, envir, enclos): object 'a' not found
 

@@ -156,7 +156,7 @@ $(document).ready(function () {
 </style>
 <div id="acknowledgments" class="section level2">
 <h2>Acknowledgments</h2>
-<p>The content of this blog is based on notes collected and experiments performed while reading the <strong><a href="http://adv-r.had.co.nz/Computing-on-the-language.html">“Non-standard Evaluation”</a> chapter</strong> in <a href="http://adv-r.had.co.nz/"><strong>“Advanced R”</strong></a> by <strong>Hadley Wickham</strong> [1]. The supporting <a href>R markdown TBD</a> used for generating these notes/ experiments can be find in the following <a href="https://github.com/pparacch/DataSciencePosts">repository</a>.</p>
+<p>The content of this blog is based on notes collected and experiments performed while reading the <strong><a href="http://adv-r.had.co.nz/Computing-on-the-language.html">“Non-standard Evaluation”</a> chapter</strong> in <a href="http://adv-r.had.co.nz/"><strong>“Advanced R”</strong></a> by <strong>Hadley Wickham</strong> [1]. The <a href="https://github.com/pparacch/DataSciencePosts/blob/master/nse_vs_se_in_r_exploration.Rmd">supporting R markdown</a> used for generating these notes/ experiments can be find in the following <a href="https://github.com/pparacch/DataSciencePosts">repository</a>.</p>
 </div>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
@@ -320,7 +320,7 @@ as.Date.default
 ##     stop(gettextf(&quot;do not know how to convert '%s' to class %s&quot;, 
 ##         deparse(substitute(x)), dQuote(&quot;Date&quot;)), domain = NA)
 ## }
-## &lt;bytecode: 0x7fa764d7fad0&gt;
+## &lt;bytecode: 0x7fa8b6eba4d0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <p>Create some internal data structures as in <code>pairwise.t.test</code> in <code>DNAME &lt;- paste(deparse(substitute(x)), &quot;and&quot;, deparse(substitute(g)))</code> …</p>
 <pre class="r"><code>#print out the implementing code
@@ -370,7 +370,7 @@ pairwise.t.test
 ##     class(ans) &lt;- &quot;pairwise.htest&quot;
 ##     ans
 ## }
-## &lt;bytecode: 0x7fa763b5fa28&gt;
+## &lt;bytecode: 0x7fa8b6e02a28&gt;
 ## &lt;environment: namespace:stats&gt;</code></pre>
 </div>
 </div>
@@ -492,7 +492,7 @@ a_dataframe[a_dataframe$a &gt;=4,]
 ##     }
 ##     x[r, vars, drop = drop]
 ## }
-## &lt;bytecode: 0x7fa765748ff8&gt;
+## &lt;bytecode: 0x7fa8b845e9f8&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <div id="a-simple-subset-re-implementation" class="section level4">
 <h4>A simple <code>subset()</code> re-implementation</h4>
@@ -627,8 +627,8 @@ g &lt;- function(){
 #the environment associated with the function g
 #calling f()
 g()
-## &lt;environment: 0x7fa768a2f0d8&gt;
-## &lt;environment: 0x7fa768a2f0d8&gt;
+## &lt;environment: 0x7fa8ba8cccd8&gt;
+## &lt;environment: 0x7fa8ba8cccd8&gt;
 
 
 #When explicitly setting env will
@@ -641,7 +641,7 @@ g1 &lt;- function(){
 }
 
 g1()
-## &lt;environment: 0x7fa764ea41f8&gt;
+## &lt;environment: 0x7fa8b81341f8&gt;
 ## &lt;environment: R_GlobalEnv&gt;</code></pre>
 </div>
 </div>
@@ -679,14 +679,14 @@ subscramble &lt;- function(x, condition){
 #a &lt;- 5:9 #Comment out to remove the error
 subscramble(a_dataframe, a &gt;= 4)
 ## [1] &quot;--&gt; subscramble (current. env, parent.frame)&quot;
-## &lt;environment: 0x7fa76568d6e0&gt;
+## &lt;environment: 0x7fa8b82b7ae0&gt;
 ## &lt;environment: R_GlobalEnv&gt;
 ## [1] &quot;--&gt; scramble (current. env, parent.frame)&quot;
-## &lt;environment: 0x7fa76568fd20&gt;
-## &lt;environment: 0x7fa76568d6e0&gt;
+## &lt;environment: 0x7fa8b81ab120&gt;
+## &lt;environment: 0x7fa8b82b7ae0&gt;
 ## [1] &quot;--&gt; subset2 (current. env, parent.frame)&quot;
-## &lt;environment: 0x7fa765692ad0&gt;
-## &lt;environment: 0x7fa76568d6e0&gt;
+## &lt;environment: 0x7fa8b83c82d0&gt;
+## &lt;environment: 0x7fa8b82b7ae0&gt;
 ## condition
 ## Error in eval(expr, envir, enclos): object 'a' not found
 
