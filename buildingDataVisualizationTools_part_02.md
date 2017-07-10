@@ -1,5 +1,5 @@
 # The 'ggplot2' package
-Pier Lorenzo Paracchini, 9 July 2017  
+Pier Lorenzo Paracchini, 10 July 2017  
 
 
 
@@ -209,7 +209,7 @@ gridExtra::grid.arrange(plot_11, plot_12, plot_21, plot_22, ncol = 2)
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/basicStaticTransformation-1.png)<!-- -->
 
-It is also possible to use explicitly the __stat__ component instead of the __geom__, this works because stat components automatically have a geom associated with them. The advantage of using directly the  __stat__ component is that parameters of the stat can be specified clearly as part of the stat (not possible when using the __geom__).
+It is also possible to use explicitly the __stat__ component instead of the __geom__, this works because __stat__ components automatically have a geom associated with them. The advantage of using directly the  __stat__ component is that parameters of the stat can be specified clearly as part of the stat (not possible when using the __geom__).
 
 
 ```r
@@ -226,6 +226,17 @@ gridExtra::grid.arrange(plot_11, plot_12, ncol = 2)
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/basicStaticTransformation_ext-1.png)<!-- -->
 
+### The `group` aesthetic
 
+`ggplot2` automatically handles plotting of multiple groups of data using the `shape`, `color`, ... aesthetics. Sometimes it would be useful to be able to explicitly force a grouping for a plot. This can be achieved via the `group` aesthetic.
+
+
+```r
+plot_object <- ggplot(data = mtcars, mapping = aes(y = mpg, x = wt))
+plot_object + geom_point() +
+  geom_smooth(mapping = aes(group = am))
+```
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/groupAesthetic-1.png)<!-- -->
 
 

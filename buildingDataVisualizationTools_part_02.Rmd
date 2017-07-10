@@ -220,6 +220,14 @@ plot_12 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt), method = "l
 gridExtra::grid.arrange(plot_11, plot_12, ncol = 2)
 ```
 
+### The `group` aesthetic
 
+`ggplot2` automatically handles plotting of multiple groups of data using the `shape`, `color`, ... aesthetics. Sometimes it would be useful to be able to explicitly force a grouping for a plot. This can be achieved via the `group` aesthetic.
+
+```{r groupAesthetic}
+plot_object <- ggplot(data = mtcars, mapping = aes(y = mpg, x = wt))
+plot_object + geom_point() +
+  geom_smooth(mapping = aes(group = am))
+```
 
 
