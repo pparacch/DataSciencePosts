@@ -1,4 +1,4 @@
-# The ggplot2 package
+# The 'ggplot2' package
 Pier Lorenzo Paracchini, 9 July 2017  
 
 
@@ -67,11 +67,13 @@ Some essential concepts to understand when working with `ggplot2` are
 
 ### Geoms and aesthetics
 
-__Geoms__ and __aesthetics__ help to specify what sort of graph will be used in the plot and some more details about the graph. Specifically, each __geom__ has a set of required and optional __aesthetics__ that are used to control the graphic shape. __Required aesthetics__ must be provided or an exception is going to be thrown when creating the plot. More information can be found in the R documentation for each specific __geom__  (see `?geom_xxxx`). __Specifying geoms and aesthetics provides the basis for creating a wide variety of plots with ggplot2.__
+__Geoms__ and __aesthetics__ help to specify what sort of graph will be used in the plot and some more details about the graph. Specifically, each __geom__ has a set of required and optional __aesthetics__ that are used to control the graphic shape. 
+
+__Required aesthetics__ must be provided or an exception is going to be thrown when creating the plot. More information can be found in the R documentation for each specific __geom__  (see `?geom_xxxx`). __Geoms and aesthetics provides the basis for creating a wide variety of plots with ggplot2.__
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/ggplot2_aesthetics.png)<!-- -->
 
-For example if we want to create a scatterplot the `geom_point` must be used. From the R documentation we can see that this __geom__ understands the following __aesthetics__:
+__Example__ if we want to create a scatterplot the `geom_point` must be used. From the R documentation we can see that this __geom__ understands the following __aesthetics__:
 
 * x, y (mandatory), define what is going to be actually plotted on the x- y- axis
 * alpha, colour, fill, group, shape, size, stroke (optional)
@@ -97,7 +99,7 @@ gridExtra::grid.arrange(plot_11, plot_12, plot_21, plot_22, ncol = 2)
 
 ### Scales
 
-Another important component in `ggplot2` if the __scale__ component. The __scale__ component covers the axis and legends on plots.
+Another important component in `ggplot2` if the __scale__ component. The __scale__ component allows to customize the axis and legends on plots.
 
 Scales are normally automatically managed by `ggplot2` but sometimes we want to have more control in order to optimize our plot. `ggplot2` provides a number of different scale functions that can be used for this purpose, those functions follow the pattern below
 
@@ -106,13 +108,8 @@ Scales are normally automatically managed by `ggplot2` but sometimes we want to 
 scale_[aesthetic]_[vector type]
 
 # Some examples in ggplot2
-scale_x_continuous
-scale_x_date
-scale_x_datetime
-scale_x_discrete
-
-scale_shape_continuous
-scale_shape_discrete
+# scale_x_continuous, scale_x_date, scale_x_datetime, scale_x_discrete
+# scale_shape_continuous, scale_shape_discrete
 ...
 ```
 
@@ -176,8 +173,58 @@ gridExtra::grid.arrange(plot_basic, plot_scale_size, ncol = 2)
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/scaleExample2-1.png)<!-- -->
 
+### Statistical Transformations (stat)
+
+Every __geom__ has a __stat__ associated to it and every __stat__ has a __geom__ associated to it (see `?geom_xxxx`). A __stat__ defines a transformation to be used on the data before being mapped to aesthetics.
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/ggplot2_stat.png)<!-- -->
+
+Some examples  
+
+  * the `geom_point` has the `stat = "identity"` associated to it (default setting),
+      * the `stat_identity` is a special transformation that leaves the data unchanged, the data values are mapped directly to the aesthetics (without any actual transformation)
+  * the `geom_bar` has the `stat = "count"` associated to it (default setting),
+      * the `stat_count` is a transformation that counts the number of cases at each x position
+  * the `geom_smooth`has the `stat = 'smooth'` associated to it (default setting),
+      * the `stat_smooth` is a transformation that iads to see patterns in the plot.
 
 
+```r
+plot_object <- ggplot(data = mtcars)
+# example using the geom_point (and the stat_identity)
+plot_11 <- plot_object + geom_point(mapping = aes(y = mpg, x = wt))
+
+# example using the geom_bar (and the stat_count)
+plot_12 <- plot_object + 
+  geom_bar(mapping = aes(x = factor(am)))
+
+# example using the geom_smooth (and the stat_smooth)
+plot_21 <- plot_object + geom_smooth(mapping = aes(y = mpg, x = wt))
+
+# example using explicitly the stat_smooth (and the geom_smooth)
+plot_22 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt))
+
+gridExtra::grid.arrange(plot_11, plot_12, plot_21, plot_22, ncol = 2)
+```
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/basicStaticTransformation-1.png)<!-- -->
+
+It is also possible to use explicitly the __stat__ component instead of the __geom__, this works because stat components automatically have a geom associated with them. The advantage of using directly the  __stat__ component is that parameters of the stat can be specified clearly as part of the stat (not possible when using the __geom__).
+
+
+```r
+plot_object <- ggplot(data = mtcars)
+# example using explicitly the stat_smooth (and the geom_smooth)
+plot_11 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt))
+
+# example using explicitly the stat_smooth (and the geom_smooth)
+# setting explicitly the method we want to use
+plot_12 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt), method = "lm")
+
+gridExtra::grid.arrange(plot_11, plot_12, ncol = 2)
+```
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/basicStaticTransformation_ext-1.png)<!-- -->
 
 
 
