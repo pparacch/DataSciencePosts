@@ -239,4 +239,17 @@ plot_object + geom_point() +
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/groupAesthetic-1.png)<!-- -->
 
+### Position Adjustment
 
+`ggplot2` often handles automatically how to arrage overlapping __geoms__. The __position adjustment__ can be controlled using the `position` argument for the __geom__ (see example below).
+
+
+```r
+plot_object <- ggplot(data = mtcars, mapping = aes(x = factor(am), fill = factor(cyl)))
+plot_1 <- plot_object + geom_bar(color = "black") + ggtitle("stack") #default position is stack
+plot_2 <- plot_object + geom_bar(color = "black", position = "dodge") + ggtitle("dodge")
+plot_3 <- plot_object + geom_bar(color = "black", position = "fill") + ggtitle("fill")
+grid.arrange(plot_1, plot_2, plot_3, ncol = 3, layout_matrix = rbind(c(NA,1,NA), c(2,NA,3)))
+```
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/positionAdjustment-1.png)<!-- -->
