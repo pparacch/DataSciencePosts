@@ -1,15 +1,13 @@
-# The 'ggplot2' package
+# The 'ggplot2' package: essential concepts
 Pier Lorenzo Paracchini, 10 July 2017  
 
 
 
-The `ggplot2` package is described as _"a system for 'declaratively' creating graphics based on 'The Grammar of Grapics'_ [CRAN](https://cran.r-project.org/web/packages/ggplot2/index.html). 
-
-The `ggplot2` package represents a __complete graphic system__ completely separated, and uncompatible, from the traditional `graphic` package in R. The `ggplot2` is built on the `grid` package, it provides high level functions to generate complete plots within the __grid__ world.
+The `ggplot2` package is described as "a system for 'declaratively' creating graphics based on 'The Grammar of Grapics'" [CRAN](https://cran.r-project.org/web/packages/ggplot2/index.html). It represents a __complete graphic system__ completely separated, and uncompatible, from the traditional `graphic` package in R. Actually the `ggplot2` is built on the `grid` package and provides high level functions to generate complete plots within the __grid__ world.
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/ggplot2_graphics.png)<!-- -->
 
-The `ggplot2`package is not part of the standard R installation so it must be first installed and then loaded into R
+The `ggplot2`package is not part of the standard R installation so it must be first installed and then loaded into R...
 
 ```
 #Install
@@ -18,9 +16,9 @@ install.packages("ggplot2")
 library(ggplot2)
 ```
 
-## The `ggplot2` graphics model
+## The `ggplot2` Graphics Model
 
-The `ggplot2`package provides a __set of functions__ that can be used to __create simple graphic components__, like __lego blocks__, that __can be combined to create complete plots__.
+The `ggplot2`package provides a __set of components__ that can be used to __create simple graphic components__, like __lego blocks__, that __can be combined to create complete and complex plots__.
 
 The essential steps to create a plot are:
 
@@ -30,11 +28,11 @@ __An example of a basic plot__...
 
 
 ```r
-# using the mtcars dataset in the 'datasets' package
-# Data was extracted from rom the 1974 Motor Trend US magazine, 
+# Using the mtcars dataset in the 'datasets' package
+# Data was extracted from 1974 Motor Trend US magazine, 
 # includes fuel consumption and 10 aspects of automobile design 
 # and performance for 32 automobiles (1973–74 models).
-#?mtcars #for more information
+#?mtcars #use for more information
 
 # Suppose that we want to visualize how the consuption changes 
 # based on the weight -> Plotting the Miles/ per gallon 
@@ -44,7 +42,7 @@ __An example of a basic plot__...
 # mappings (aesthetic) is provided. These setting will be the
 # default settings for the other components (geom_) added to the
 # plot
-plot_object <- ggplot(data = mtcars, mapping = aes(y = mpg, x = wt))
+plot_object <- ggplot(data = mtcars, mapping = aes(y = mpg, x = wt)) + ggtitle("Basic example")
 # geom_point does not need to specify the data and mapping because
 # it has already specified at the plot object level (note they can
 # be overwritten at the geom_ level)
@@ -53,32 +51,32 @@ plot_object + geom_point()
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/basicExample-1.png)<!-- -->
 
-Some essential concepts to understand when working with `ggplot2` are
+Some __essential concepts__ to understand when working with `ggplot2` are
 
-* geoms & aesthetics,
-* scales,
-* statistical transformations,
+* _geoms & aesthetics_,
+* _scales_,
+* _statistical transformations_,
+* coordinate transformations,
 * the `group` aesthetic
 * position adjustments,
-* coordinate transformations,
 * facets,
 * themes, and
 * annotating.
 
 ### Geoms and aesthetics
 
-__Geoms__ and __aesthetics__ help to specify what sort of graph will be used in the plot and some more details about the graph. Specifically, each __geom__ has a set of required and optional __aesthetics__ that are used to control the graphic shape. 
+__Geoms__ help to specify what sort of graph (type of graph) will be used in the plot, while __aesthetics__ help to add some more low level details about the graph. 
 
-__Required aesthetics__ must be provided or an exception is going to be thrown when creating the plot. More information can be found in the R documentation for each specific __geom__  (see `?geom_xxxx`). __Geoms and aesthetics provides the basis for creating a wide variety of plots with ggplot2.__
+Specifically, each __geom__ has a set of __required__ and __optional__ __aesthetics__ that are used to control the specific parts of the graph. __Required aesthetics__ must be provided or an exception is going to be thrown when creating the plot. For each specific __geom__ more information can be found in the R documentation (see `?geom_xxxx`). __Geoms and aesthetics provides the basis for creating a wide variety of plots with ggplot2.__
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/ggplot2_aesthetics.png)<!-- -->
 
-__Example__ if we want to create a scatterplot the `geom_point` must be used. From the R documentation we can see that this __geom__ understands the following __aesthetics__:
+For example, if we want to create a __scatterplot__ the `geom_point` __geom__ must be used. From the R documentation this __geom__ understands the following __aesthetics__:
 
-* x, y (mandatory), define what is going to be actually plotted on the x- y- axis
-* alpha, colour, fill, group, shape, size, stroke (optional)
+* x, y (__mandatory__), define what is going to be actually plotted on the x- y- axis,
+* alpha, colour, fill, group, shape, size, stroke (__optional__).
 
-Using the __aesthetics__ we are able to __define__ & __customize__ the plot see the example below on how to create a plot and add more and more information to it.
+Using the __aesthetics__ we are able to __define__ & __customize__ the plot adding more and more information to it (see example below).
 
 
 ```r
@@ -87,10 +85,10 @@ Using the __aesthetics__ we are able to __define__ & __customize__ the plot see 
 mtcars$gear <- factor(mtcars$gear)
 
 plot_object <- ggplot(data = mtcars, mapping = aes(y = mpg, x = wt))
-plot_11 <- plot_object + geom_point()
-plot_12 <- plot_object + geom_point(aes(shape = gear))
-plot_21 <- plot_object + geom_point(aes(colour = gear))
-plot_22 <- plot_object + geom_point(aes(colour = gear, size = disp), alpha = 0.5)
+plot_11 <- plot_object + geom_point() + ggtitle("plot_11")
+plot_12 <- plot_object + geom_point(aes(shape = gear)) + ggtitle("plot_12")
+plot_21 <- plot_object + geom_point(aes(colour = gear)) + ggtitle("plot_21")
+plot_22 <- plot_object + geom_point(aes(colour = gear, size = disp), alpha = 0.5) + ggtitle("plot_22")
 
 gridExtra::grid.arrange(plot_11, plot_12, plot_21, plot_22, ncol = 2)
 ```
@@ -99,9 +97,7 @@ gridExtra::grid.arrange(plot_11, plot_12, plot_21, plot_22, ncol = 2)
 
 ### Scales
 
-Another important component in `ggplot2` if the __scale__ component. The __scale__ component allows to customize the axis and legends on plots.
-
-Scales are normally automatically managed by `ggplot2` but sometimes we want to have more control in order to optimize our plot. `ggplot2` provides a number of different scale functions that can be used for this purpose, those functions follow the pattern below
+Another important component in `ggplot2` is the __scale__ component. The __scale__ component allows to customize the axis and legends information on plots. __Scales are normally automatically managed by `ggplot2`__ but sometimes more control is needed in order to optimize our plot. `ggplot2` provides a number of different scale functions that can be used for this purpose, those functions follow the following naming-pattern
 
 ```
 # Pseudo-code
@@ -118,21 +114,21 @@ scale_[aesthetic]_[vector type]
 
 ```r
 plot_object <- ggplot(data = mtcars, mapping = aes(y = mpg, x = wt))
-plot_11 <- plot_object + geom_point()
+plot_11 <- plot_object + geom_point() + ggtitle("plot_11")
 
 # scale_x_ and scale_y_ can be used to change the title
 plot_12 <- plot_object + geom_point() +
   scale_x_continuous(name = "Weight (1000 lbs)") +
-  scale_y_continuous(name = "Miles Per Gallon")
+  scale_y_continuous(name = "Miles Per Gallon") + ggtitle("plot_12")
 
 # scale_x_ and scale_y_ can also be used to control the range of the axis
 plot_21 <- plot_object + geom_point() +
   scale_x_continuous(limits = c(0,10)) + 
-  scale_y_continuous(limits = c(0,100))
+  scale_y_continuous(limits = c(0,100)) + ggtitle("plot_21")
 
 # scale_color_manual can be used to control "manually" your own color sets
 plot_22 <- plot_object + geom_point(aes(colour = gear)) +
-  scale_color_manual(values = c("blue", "red", "yellow"))
+  scale_color_manual(values = c("blue", "red", "yellow")) + ggtitle("plot_22")
 
 gridExtra::grid.arrange(plot_11, plot_12, plot_21, plot_22, ncol = 2)
 ```
@@ -144,7 +140,7 @@ Some more examples ...
 
 ```r
 plot_object <- ggplot(data = worldcup, mapping = aes(x = Time, y = Passes, color = Position, size = Shots))
-plot_basic <- plot_object + geom_point(alpha = 0.5)
+plot_basic <- plot_object + geom_point(alpha = 0.5) + ggtitle("plot_basic")
 
 # using the scale_ functions to change some x-axis settings
 # the title
@@ -152,7 +148,7 @@ plot_basic <- plot_object + geom_point(alpha = 0.5)
 plot_scale_x <- plot_basic +
   scale_x_continuous(name = "Time Played (mins)",
                      breaks = 90 * c(2,4,6),
-                     minor_breaks = 90 * c(1,3,5))
+                     minor_breaks = 90 * c(1,3,5)) + ggtitle("plot_scale_x")
 
 gridExtra::grid.arrange(plot_basic, plot_scale_x, ncol = 2)
 ```
@@ -166,16 +162,16 @@ gridExtra::grid.arrange(plot_basic, plot_scale_x, ncol = 2)
 # the breaks used
 plot_scale_size <- plot_scale_x +
   scale_size_continuous(name = "Shots on goal",
-                        breaks = c(0,10,20,30))
+                        breaks = c(0,10,20,30)) + ggtitle("plot_scale_size")
 
 gridExtra::grid.arrange(plot_basic, plot_scale_size, ncol = 2)
 ```
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/scaleExample2-1.png)<!-- -->
 
-### Statistical Transformations (stat)
+### Statistical Transformations
 
-Every __geom__ has a __stat__ associated to it and every __stat__ has a __geom__ associated to it (see `?geom_xxxx`). A __stat__ defines a transformation to be used on the data before being mapped to aesthetics.
+Every __geom__ has a __stat__ associated to it (default setting) and every __stat__ has a __geom__ associated to it (see `?geom_xxxx`). A __stat__ defines a __transformation to be used on the data before being mapped to aesthetics__.
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/ggplot2_stat.png)<!-- -->
 
@@ -192,34 +188,34 @@ Some examples
 ```r
 plot_object <- ggplot(data = mtcars)
 # example using the geom_point (and the stat_identity)
-plot_11 <- plot_object + geom_point(mapping = aes(y = mpg, x = wt))
+plot_11 <- plot_object + geom_point(mapping = aes(y = mpg, x = wt)) + ggtitle("plot_11")
 
 # example using the geom_bar (and the stat_count)
 plot_12 <- plot_object + 
-  geom_bar(mapping = aes(x = factor(am)))
+  geom_bar(mapping = aes(x = factor(am))) + ggtitle("plot_12")
 
 # example using the geom_smooth (and the stat_smooth)
-plot_21 <- plot_object + geom_smooth(mapping = aes(y = mpg, x = wt))
+plot_21 <- plot_object + geom_smooth(mapping = aes(y = mpg, x = wt)) + ggtitle("plot_21")
 
 # example using explicitly the stat_smooth (and the geom_smooth)
-plot_22 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt))
+plot_22 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt)) + ggtitle("plot_22")
 
 gridExtra::grid.arrange(plot_11, plot_12, plot_21, plot_22, ncol = 2)
 ```
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/basicStaticTransformation-1.png)<!-- -->
 
-It is also possible to use explicitly the __stat__ component instead of the __geom__, this works because __stat__ components automatically have a geom associated with them. The advantage of using directly the  __stat__ component is that parameters of the stat can be specified clearly as part of the stat (not possible when using the __geom__).
+It is also __possible to use explicitly__ the __stat__ component __instead of__ the __geom__, this works because __stat__ components automatically have a geom associated with them. The advantage of using directly the  __stat__ component is that parameters of the stat can be specified clearly as part of the stat (not possible when using the __geom__).
 
 
 ```r
 plot_object <- ggplot(data = mtcars)
 # example using explicitly the stat_smooth (and the geom_smooth)
-plot_11 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt))
+plot_11 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt)) + ggtitle("plot_11")
 
 # example using explicitly the stat_smooth (and the geom_smooth)
 # setting explicitly the method we want to use
-plot_12 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt), method = "lm")
+plot_12 <- plot_object + stat_smooth(mapping = aes(y = mpg, x = wt), method = "lm") + ggtitle("plot_12")
 
 gridExtra::grid.arrange(plot_11, plot_12, ncol = 2)
 ```
