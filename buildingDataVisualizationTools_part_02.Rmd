@@ -69,16 +69,11 @@ Some __essential concepts__ to understand when working with `ggplot2` are
 * _scales_,
 * _statistical transformations_,
 * _coordinate transformations_.
-
-Other __details__ that are worth to know when working with `ggplot2` are
-
 * _the `group` aesthetic_,
 * _position adjustments_,
 * facets,
 * themes, and
 * annotating.
-
-## Essential Concepts
 
 ### Geoms and aesthetics
 
@@ -247,8 +242,6 @@ plot_12 <- plot_11 +
 gridExtra::grid.arrange(plot_11, plot_12, ncol = 2)
 ```
 
-## Other Details
-
 ### The `group` aesthetic
 
 `ggplot2` automatically handles plotting of multiple groups of data using the `shape`, `color`, ... aesthetics. Sometimes it would be useful to be able to explicitly force a grouping for a plot. This can be achieved via the `group` aesthetic.
@@ -270,3 +263,41 @@ plot_2 <- plot_object + geom_bar(color = "black", position = "dodge") + ggtitle(
 plot_3 <- plot_object + geom_bar(color = "black", position = "fill") + ggtitle("fill")
 grid.arrange(plot_1, plot_2, plot_3, ncol = 3, layout_matrix = rbind(c(NA,1,NA), c(2,NA,3)))
 ```
+
+### Facets
+
+__Facets__/ __faceting__ means to __break the data into several subsets__ and __create a separate plot for each subset__ (also known as __small multiples__). `ggplot2` provides two different functions fro creating __small multiples__: the `facet_grid()` and the `facet_wrap()` functions.
+
+`facet_grid` forms a matrix of panels defined by row and column facetting variables, in other words the `fact_grid` can facet by one or (max) two variables.
+
+```
+#Pseudo code
+facet_grid(facets = [factor for rows] ~ [factor for columns],....)
+```
+
+```{r gridExample}
+plot_base  <- ggplot(data = mtcars, mapping = aes(x = disp, y = mpg)) + geom_point()
+plot_1 <- plot_base + facet_grid(. ~ cyl) + ggtitle("plot_1") #only feature for columns
+plot_2 <- plot_base + facet_grid(cyl ~ .) + ggtitle("plot_2") #only feature for rows
+plot_3 <- plot_base + facet_grid(am ~ cyl) + ggtitle("plot_3") #both feature for rows & columns
+grid.arrange(plot_1, plot_2, plot_3, ncol = 4, layout_matrix = rbind(c(1,1,2,2), c(3,3,3,3)))
+```
+
+`facet_wrap` can facet by one or more variables and it wraps a 1-dimensiona sequence of panels into 2 dimension.
+```
+#Pseudo code
+facet_wrap(facets = ~[formula with factor(s) for faceting], ncol = [number of columns],....)
+```
+
+```{r wrapExample}
+plot_base  <- ggplot(data = mtcars, mapping = aes(x = disp, y = mpg)) + geom_point()
+#faceting by one variable
+plot_1 <- plot_base + facet_wrap(~ cyl) + ggtitle("plot_1") 
+#faceting by one variable controlling the no fo columns 
+plot_2 <- plot_base + facet_wrap(~ cyl, ncol = 2) + ggtitle("plot_2")
+#faceting by multi variables 
+plot_3 <- plot_base + facet_grid(~ cyl + am) + ggtitle("plot_3") 
+grid.arrange(plot_1, plot_2, plot_3, ncol = 4, layout_matrix = rbind(c(1,1,2,2), c(3,3,3,3)))
+```
+
+
