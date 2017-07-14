@@ -1,7 +1,13 @@
-# The 'ggplot2' package: essential concepts
+# Building Data Visualization Tools (Part 2)
 Pier Lorenzo Paracchini, 14 July 2017  
 
 
+
+#
+
+The content of this blog is based on notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1] and _"chapter 5: The Grammar of Graphics: The ggplot2 Package"_ of [2].
+
+## 'ggplot2' package, essential concepts
 
 The `ggplot2` package is described as "a system for 'declaratively' creating graphics based on 'The Grammar of Grapics'" [CRAN](https://cran.r-project.org/web/packages/ggplot2/index.html). It represents a __complete graphic system__ completely separated, and uncompatible, from the traditional `graphic` package in R. Actually the `ggplot2` is built on the `grid` package and provides high level functions to generate complete plots within the __grid__ world.
 
@@ -51,7 +57,7 @@ plot_object + geom_point()
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/basicExample-1.png)<!-- -->
 
-Some __essential concepts__ to understand when working with `ggplot2` are
+Some __essential concepts__ to master when working with `ggplot2` are
 
 * _geoms & aesthetics_,
 * _scales_,
@@ -59,9 +65,8 @@ Some __essential concepts__ to understand when working with `ggplot2` are
 * _coordinate transformations_.
 * _the `group` aesthetic_,
 * _position adjustments_,
-* facets,
-* themes, and
-* annotating.
+* _facets_,
+* _themes_.
 
 ### Geoms and aesthetics
 
@@ -320,5 +325,33 @@ grid.arrange(plot_1, plot_2, plot_3, ncol = 4, layout_matrix = rbind(c(1,1,2,2),
 ```
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/wrapExample-1.png)<!-- -->
+
+### Themes
+
+In `ggplot2` there is a distinction between __data related__ and __non-data related__ elements. Specifically, __geoms__ are __data related elements__ while labels, lines used to create axes and legends, etc are __non-data related__ elements. 
+
+The collection of graphical parameters that control __non-data related elements__ is called a _theme_. A _theme_ can be added as another component to a plot to change the appearance of graphical objects. A number of _theme_ functions are provided in `ggplot2` like `theme_bw()`, `theme_minimal()`, `theme_dark()`, `theme_classic()`, etc (see `?theme_bw` for more information) and more can be found in other packages like `ggthemes`.
+
+A _theme_ controls all non-data display in a plot, a _theme_ is useful when standardization is necessary when plotting for all plots in the same report, publication, company, etc.
+
+
+```r
+plot_object <- ggplot(data = mtcars) + geom_point(mapping = aes(y = mpg, x = wt)) 
+# example using the geom_point (and the stat_identity)
+plot_theme_no <- plot_object + ggtitle("no theme")
+plot_theme_void <- plot_object + ggtitle("theme void") + theme_void()
+plot_theme_bw <- plot_object + ggtitle("theme bw") + theme_bw()
+plot_theme_dark <- plot_object + ggtitle("theme dark") + theme_dark()
+
+grid.arrange(plot_theme_no, plot_theme_void, plot_theme_bw, plot_theme_dark, ncol = 2)
+```
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/basicTheme-1.png)<!-- -->
+
+# References
+[1] "[Mastering Software Development in R](https://bookdown.org/rdpeng/RProgDA/)" by Roger D. Peng, Sean Cross and Brooke Anderson, 2017  
+[2] "[R Graphics, Second Edition](https://www.crcpress.com/R-Graphics-Second-Edition/Murrell/p/book/9781439831762)" by Paul Murrell, (2011) CRC Press  
+[3] "[Building Data Visualization Tools (Part 1): basic plotting with R and ggplot2](https://pparacch.github.io/2017/07/06/plotting_in_R_ggplot2_part_1.html)" by Pier Lorenzo Paracchini
+
 
 
