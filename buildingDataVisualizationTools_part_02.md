@@ -1,5 +1,5 @@
 # The 'ggplot2' package: essential concepts
-Pier Lorenzo Paracchini, 10 July 2017  
+Pier Lorenzo Paracchini, 14 July 2017  
 
 
 
@@ -56,12 +56,17 @@ Some __essential concepts__ to understand when working with `ggplot2` are
 * _geoms & aesthetics_,
 * _scales_,
 * _statistical transformations_,
-* coordinate transformations,
-* the `group` aesthetic
-* position adjustments,
+* _coordinate transformations_.
+
+Other __details__ that are worth to know when working with `ggplot2` are
+
+* _the `group` aesthetic_,
+* _position adjustments_,
 * facets,
 * themes, and
 * annotating.
+
+## Essential Concepts
 
 ### Geoms and aesthetics
 
@@ -221,6 +226,37 @@ gridExtra::grid.arrange(plot_11, plot_12, ncol = 2)
 ```
 
 ![](buildingDataVisualizationTools_part_02_files/figure-html/basicStaticTransformation_ext-1.png)<!-- -->
+
+### Coordinate Transformations
+
+Another type of transformation available in `ggplot2` is thhe __coordinate transformation__. There is a __coordinate system component__, by default set to a __simple linear cartesian coordinates__, that could be explicitly set to something else. The __peculiarity__ of this type of transformation is that it does __occur after the geoms have been created__ and __control how the graphs (geoms) are drawn on the screen__.  
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/ggplot2_coord.png)<!-- -->
+
+
+```r
+plot_object <- ggplot(data = mtcars)
+
+#Apply a log scale both on x and y
+#logged data with linear axes
+plot_11 <- plot_object + geom_point(mapping = aes(y = mpg, x = wt)) + 
+  scale_x_continuous(trans = "log") +
+  scale_y_continuous(trans = "log") +
+  geom_line(mapping = aes(y = mpg, x = wt), stat = "smooth", method = "lm") +
+  ggtitle("log data with linear axes")
+
+#Apply an "exp" coordinate transformation to x & y 
+#before actually plotting the graphs/ geoms
+#logged data with exponential axes
+plot_12 <- plot_11 +
+  coord_trans(x = "exp", y = "exp") + ggtitle("log data with exponential axes")
+
+gridExtra::grid.arrange(plot_11, plot_12, ncol = 2)
+```
+
+![](buildingDataVisualizationTools_part_02_files/figure-html/basicCoordinateTrans-1.png)<!-- -->
+
+## Other Details
 
 ### The `group` aesthetic
 
