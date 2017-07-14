@@ -1,5 +1,5 @@
 # Building Data Visualization Tools (Part 2)
-Pier Lorenzo Paracchini, 14 July 2017  
+Pier Lorenzo Paracchini, 14.07.2017  
 
 
 
