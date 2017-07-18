@@ -5,29 +5,42 @@ Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`
 
 The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1].
 
-__TODO__ __Packages used for running the examples__
-```
-library(ggplot2)
-library(dplyr)
-library(gridExtra)
-library(ggthemes)
-```
+### Setting up
 
-__TODO__ __Data used for the examples__
+__Packages used for running the examples...__
 
 
 ```r
+# If necessary to install a package run
+# install.packages("packageName")
+
+# Load packages
+library(ggplot2)
+library(dplyr) # supporting data manipulation
+library(gridExtra) # adding extra features for plotting
+library(ggthemes) # extra themes (based on ggplot2)
+```
+
+__Data used for the examples...__
+
+
+```r
+# install.packages("dlnm")
+library(dlnm)
 # Data used for this example in chicagoNMMAPS
-# contained in the dlnm package
 # Daily Mortality Weather and Pollution Data for Chicago (dataset)
 # ?chicagoNMMAPS #for more info about the data
-
-#install.packages("dlnm")
-library(dlnm)
 data("chicagoNMMAPS") #?chicagoNMMAPS
 chic <- chicagoNMMAPS
+# selecting only data for July 1995
 chic_july <- chic %>%
   filter(month == 7 & year == 1995)
+
+# install.packages("faraway")
+library(faraway)
+data("worldcup")
+# Data on players from the 2010 WOrld Cup
+# ?worldcup #for more info about the data
 ```
 ## Data Visualization 
 
@@ -41,11 +54,12 @@ Data can be used to tell amazing stories, plots/graphics are one of the means th
 * [Examples of New York Times graphics](http://flowingdata.com/?s=nytimes)
 * Data sings, a great example ["New Insights on poverty" by Hans Rosling, TED](https://www.ted.com/talks/hans_rosling_reveals_new_insights_on_poverty)
 
-When exploring the data, there are two main things to look for: **patterns** and **relationships**. These are the things that good graphics/ plots tries to capture.
+When exploring the data, there are two main things to look for: **patterns** and **relationships**. These are the things that good graphics/ plots tries to capture. And __remember to question always what you see__, ask __"Does it make sense?"__. __Data checking and verification is one of the most important task when looking for stories in the data__.
+
 
 ## Simple guidelines
 
-There are six simple guidelines that can be used to create good graphics/ plots (based on the works of Edward Tufte, Howard Wainer, Stephen Few, Nathan Yau):
+Six simple guidelines that can be used to create good graphics/ plots (based on the works of Edward Tufte, Howard Wainer, Stephen Few, Nathan Yau) are:
 
 * 1\# Aim for high data density.
 * 2\# Use clear and meaningful labels.
@@ -56,13 +70,12 @@ There are six simple guidelines that can be used to create good graphics/ plots 
 
 ### 1\# Aim for high data density
 
-  _'... try to increase, as much as possible, the **data to ink ratio** in your graph ... the ratio of "ink" providing information to all ink used in the figure ...'_ [1]
-
-Increasing the **data to ink** ratio makes it easier for users to see the message in the data, see example below.
+Try to increase, as much as possible, the **data to ink ratio** in your graph, the ratio of "ink" providing information to all ink used in the figure. Increasing the **data to ink** ratio makes it easier for users to see the message in the data, see example below.
 
 
 ```r
-base_plot <- ggplot(data = chic_july, mapping = aes(x = date, y = death)) + scale_y_continuous(limits = c(0, 500))
+base_plot <- ggplot(data = chic_july, mapping = aes(x = date, y = death)) + 
+  scale_y_continuous(limits = c(0, 500))
 
 # Lower Data Density
 plot_1 <- base_plot +
@@ -77,7 +90,7 @@ grid.arrange(plot_1, plot_2, ncol = 2)
 
 ![](buildingDataVisualizationTools_part_03_files/figure-html/highDataDensityExample-1.png)<!-- -->
 
-**Themes** can be used to manipulate the data density in a graphic/ plot, specifically increasing the data-to-ink ratio, see examples below.
+**Themes** can be used to manipulate the data density in a graphic/ plot, selecting the correct **theme** can help **increasing the data-to-ink ratio**, see examples below.
 
 
 ```r
@@ -116,7 +129,7 @@ Strategies that can be used to make labels clearer and meaningful:
 
 ### 3\# Provide useful references
 
-  _'Data is easier to interpret when you add references ...."_
+**Data is easier to interpret when you add references**.
 
 
 ```r
@@ -150,46 +163,84 @@ Strategies to add references to a graphic/ plot:
 * Use `alpha` to add transparency to the reference elements.
 * Use colors that are not attracting attention.
 
------------------------
+### 4\# Highlight interesting aspects
 
-
-Remember to question what you see, "Does it make sense?". Data checking and verification is one of the most important task when looking for stories in the data.
-
-
-### Some guidelines
-
-* (explicitly) explain encodings used in the visualization - What does these circles, bars and colors represent?
-* label your axes - What are they about? Is it logarithmic, exponential,...?
-* keep the geometry in check - Are you using rectangles properly in a bar plot? Does elements in a pie chart sum up t0 100%?
-* include your sources, give the data some context - Where does your data come from?
-* consider your audience and the purpose of the plot/ graphic
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Considering adding elements to highlight specific aspects of the data.
 
 
 ```r
-summary(cars)
-##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00
+base_plot <- ggplot(data = chic_july, mapping = aes(x = date, y = death))
+# Let's make the hypothesis that a heat wave was present in theg the period 14.07 - 17.07
+
+# No Highlight of this interesting aspect
+plot_1 <- base_plot +
+  geom_line() + theme_bw() + ggtitle("No Highlight")
+
+# With Highlight of this interesting aspect
+plot_2 <- base_plot +
+  geom_segment(aes(x = as.Date("1995-07-14"), xend = as.Date("1995-07-17"), 
+                   y = max(chic_july$death) + 10, yend = max(chic_july$death) + 10), color = "red", size = 3) +  
+  geom_line() + theme_bw() + 
+  ggtitle("With Highlight of Heat Wave period")
+
+grid.arrange(plot_1, plot_2, ncol = 2)
 ```
 
-## Including Plots
+![](buildingDataVisualizationTools_part_03_files/figure-html/highlightExample-1.png)<!-- -->
 
-You can also embed plots, for example:
+**Geom**s like `geom_segment`, `geom_line`, `geom_text` are quite useful for highliting interesting aspects in the graph.
 
-![](buildingDataVisualizationTools_part_03_files/figure-html/pressure-1.png)<!-- -->
+### 5\# Use small multiples (when possible)
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Small multiples are graphs that use many small plots to show different subsets of the data. All plots use the same x- and y- ranges making it easier to compare across plots.
+
+`facet_grid`and `facet_wrap`functions can be used to create in a simple way small multiples for the data (see _facets_ section in [3]). Often, when using faceting, it is necessary to rename or re-oder the factor levels of categorical features in order to make the graphs easier to read and interpret.
+
+### 6\# Make order meaningful
+
+Adding order to plots can help highlight interesting finding/ aspects in the data. When working with categorical features (`factor`) often the default ordering (e.g. alphabetical order) is not interesting and it needs to be changes to something more meaningful, see example below.
+
+
+```r
+worldcup_data <- worldcup %>%
+  group_by(Team) %>%
+  summarise(mean_time = mean(Time))
+
+# Default ordering of the Team (categorical)
+plot_1 <- ggplot(data = worldcup_data, mapping = aes(x = mean_time, y = Team)) +
+  geom_point() +
+  theme_bw() +
+  xlab("Mean per player (minutes") +
+  ylab("") +
+  ggtitle("Alphabetical Order")
+
+# With a more meaningful order - by mean_time
+plot_2 <- worldcup_data %>%
+  arrange(mean_time) %>%
+  #reorganize the level in Team (factor) before plotting
+  mutate(Team = factor(Team, levels = Team)) %>%
+  ggplot(mapping = aes(x = mean_time, y = Team)) +
+  geom_point() +
+  theme_bw() +
+  xlab("Mean per player (minutes") +
+  ylab("") +
+  ggtitle("Meaningful Order - by mean_time")
+
+grid.arrange(plot_1, plot_2, ncol = 2)
+```
+
+![](buildingDataVisualizationTools_part_03_files/figure-html/orderingExample-1.png)<!-- -->
+
+## Some more considerations
+
+* If using __encodings__ in a plot/ graph, (explicitly) explain encodings used in the visualization - What does these circles, bars and colors represent? What does that symbol represent?
+* When plotting numeric values, add required information to the labels - Is it logarithmic, exponential,...?
+* keep the plot in check - e.g. Does elements in a pie chart sum up to 100%?
+* Include your sources, give the data some context - Where does your data come from?
+* Consider your audience and the purpose of the plot/ graphic
 
 # References
 [1] "[Mastering Software Development in R](https://bookdown.org/rdpeng/RProgDA/)" by Roger D. Peng, Sean Cross and Brooke Anderson, 2017  
-[4] "[Building Data Visualization Tools (Part 1): basic plotting with R and ggplot2](https://pparacch.github.io/2017/07/06/plotting_in_R_ggplot2_part_1.html)" by Pier Lorenzo Paracchini  
-[5] "[Building Data Visualization Tools (Part 2): 'ggplot2', essential concepts](https://pparacch.github.io/2017/07/14/plotting_in_R_ggplot2_part_2.html)" by Pier Lorenzo Paracchini
+[2] "[Building Data Visualization Tools (Part 1): basic plotting with R and ggplot2](https://pparacch.github.io/2017/07/06/plotting_in_R_ggplot2_part_1.html)" by Pier Lorenzo Paracchini  
+[3] "[Building Data Visualization Tools (Part 2): 'ggplot2', essential concepts](https://pparacch.github.io/2017/07/14/plotting_in_R_ggplot2_part_2.html)" by Pier Lorenzo Paracchini
 
