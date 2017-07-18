@@ -189,7 +189,7 @@ grid.arrange(plot_1, plot_2, ncol = 2)
 
 Small multiples are graphs that use many small plots to show different subsets of the data. All plots use the same x- and y- ranges making it easier to compare across plots.
 
-`facet_grid`and `facet_wrap`functions can be used to create in a simple way small multiples for the data (see _facets_ section in [3]). Often, when using faceting, it is necessary to rename or re-oder the factor levels of categorical features in order to make the graphs easier to read and interpret.
+`facet_grid` and `facet_wrap` functions can be used to create in a simple way small multiples for the data (see _facets_ section in [3]). Often, when using faceting, it is necessary to rename or re-oder the factor levels of categorical features in order to make the graphs easier to read and interpret.
 
 ### 6\# Make order meaningful
 
