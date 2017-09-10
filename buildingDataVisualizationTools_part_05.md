@@ -96,7 +96,10 @@ grid::popViewport(2)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/scatterplotExample-1.png)<!-- -->
 
-#### Basic concepts: __Grobs__
+
+### The `grid` graphic system: basic concepts
+
+#### __Grobs__
 
 The most critical concept to understand is the concept of __grob__. A __grob__ is a __grid graphical object__ that can be created, changed and plotted using the grid graphic functions. __Grobs__ can be created and then 
 
