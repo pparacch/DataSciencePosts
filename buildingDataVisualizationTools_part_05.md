@@ -99,32 +99,31 @@ grid::popViewport(2)
 
 ### The `grid` graphic system: basic concepts
 
-#### __Grobs__
+#### __Grobs__: graphical objects
 
 The most critical concept to understand is the concept of __grob__. A __grob__ is a __grid graphical object__ that can be created, changed and plotted using the grid graphic functions. __Grobs__ can be created and then 
 
 - added or removed from larger grid objects including ggplot objects and 
 - drawn on a graphic device when a grid graphic plot is printed.
 
-Possible __grobs__ that can be created include circles, lines, points, rectangles, polygons, etc. Once a __grob__ is created, it can be modified (using the `editGrob` function) and then drawn (using the `grid.draw` function).
-
-__How to plot a circle...__
+Possible __grobs__ that can be created include circles, lines, points, rectangles, polygons, etc. Once a __grob__ is created, it can be modified (using the `editGrob` function) and then drawn (using the `grid.draw` function). See examples below.
 
 
 ```r
-# Create a circle grob object and draw it
+# Create a circle grob object and draw it in the current device
 # See ?circleGrob for possible arguments and default values
-grid.newpage()
-the_circle <- circleGrob()
-grid.draw(the_circle)
+
+grid.newpage() # Erase/ clear the current device
+the_circle <- circleGrob() # Create the circe grob
+grid.draw(the_circle) # Draw the grob (current device)
 ```
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/circleExample1-1.png)<!-- -->
 
 
 ```r
-# Create a circle grob object
-# modify the object and draw it
+# Create a circle grob object with specific settings (center and radius)
+# modify the object (center and radius) and draw it
 grid.newpage()
 the_circle <- circleGrob(x = 0.2, y = 0.2, r = 0.2)
 the_circle <- editGrob(the_circle, 
@@ -139,8 +138,8 @@ grid.draw(the_circle)
 
 ```r
 # Create a circle grob object
-# using the vectorization 
-grid.newpage()
+# using the power of vectorization 
+grid.newpage() # Erase/ clear the current device
 the_circle <- circleGrob(
   x = seq(0.1, 0.9, length = 100),
   y = 0.5 + 0.3 * sin(seq(0, 2*pi, length = 100)),
@@ -150,8 +149,42 @@ grid.draw(the_circle)
 ```
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/circleExample3-1.png)<!-- -->
----
 
+More grob objects can be plot on the same device as part of the same visualization/ graph, your fantasy becomes your limit ...
+
+
+```r
+grid.newpage() # Erase/ clear the current device
+
+outer_rectangle <- rectGrob()
+my_circle <- circleGrob(x = 0.5, y = 0.5, r = 0.4, 
+                        gp = gpar(col = "blue", lty = 2))
+my_rect <- rectGrob(width = 0.9, height = 0.2,
+                    gp = gpar(col = "red", lty = 3))
+
+grid.draw(outer_rectangle)
+grid.draw(my_circle)
+grid.draw(my_rect)
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExample1-1.png)<!-- -->
+
+
+
+```r
+grid.newpage() # Erase/ clear the current device
+outer_rectangle <- rectGrob(gp = gpar(lty = 3))
+curve_1 <- curveGrob(x1 = 0.1, y1 = 0.25, x2 = 0.3, y2 = 0.75)
+curve_2 <- curveGrob(x1 = 0.4, y1 = 0.25, x2 = 0.6, y2 = 0.75, square = F, ncp = 8, curvature = 0.5)
+curve_3 <- curveGrob(x1 = 0.7, y1 = 0.25, x2 = 0.9, y2 = 0.75, square = F, angle = 45, shape = -1)
+
+grid.draw(outer_rectangle)
+grid.draw(curve_1)
+grid.draw(curve_2)
+grid.draw(curve_3)
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExample2-1.png)<!-- -->
 
 
 
