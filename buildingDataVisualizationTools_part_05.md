@@ -12,13 +12,13 @@ The content of this blog is based on examples/ notes/ experiments related to the
 library(grid)
 ```
 
-## Introduction
+# Introduction
 
 __TODO__ Set up a scenario for...  
 __TODO__ Add an example on how to add details into your graphs/ visualization using ggplot2 and grid  
     __??__ Example from the course
 
-## How to create custom graphics/ visualizations
+# How to create custom graphics/ visualizations
 
 The core package behind the graphics capabilities in R is the `grDevices` package, considered as the __engine__ for graphics/ visualizations in R. Two packages are built directly on this engine, the `graphics` and the `grid` packages, representing two __different__ and __incompatible__ graphic systems (see picture below for more information).
 
@@ -26,7 +26,7 @@ The core package behind the graphics capabilities in R is the `grDevices` packag
 
 The `ggplot2` package is built on top of the `grid` graphic system. And the `grid` package provides the primitive functions that are used by `ggplot2` for creating and drawing complete plots. While it is not required to interact directly with the `grid` package, it is necessary to understand how it does work in order to be able to add customization not supported by `ggplot2`.
 
-### The `grid` package and the `grid` graphic system
+## The `grid` package and the `grid` graphic system
 
 As stated in the "Introduction to grid" vignette [3]  
 
@@ -96,10 +96,9 @@ grid::popViewport(2)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/scatterplotExample-1.png)<!-- -->
 
+## The `grid` graphic system: basic concepts
 
-### The `grid` graphic system: basic concepts
-
-#### __Grobs__: graphical objects
+### __Grobs__: graphical objects
 
 The most critical concept to understand is the concept of __grob__. A __grob__ is a __grid graphical object__ that can be created, changed and plotted using the grid graphic functions. __Grobs__ can be created and then 
 
@@ -177,7 +176,6 @@ grid.draw(my_rect)
 ![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExample1-1.png)<!-- -->
 
 
-
 ```r
 grid.newpage() # Erase/ clear the current device
 outer_rectangle <- rectGrob(gp = gpar(lty = 3))
@@ -193,7 +191,7 @@ grid.draw(curve_3)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExample2-1.png)<!-- -->
 
-__A special argument: `gp`__
+#### A special argument: `gp`
 
 All these functions accept a `gp` argument, defined as 
 
@@ -218,24 +216,27 @@ grid.draw(my_rect)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExampleWith_gp-1.png)<!-- -->
 
-
-##### Viewports
-
-__TBD__
-
-##### Coordinate systems
+#### The `gtree` object
 
 __TBD__
 
-##### `ggplot2` and the `grid` system
+### Viewports
 
 __TBD__
 
-##### Others ...
+### Coordinate systems
 
 __TBD__
 
-### Other packages
+## `ggplot2` and the `grid` system
+
+__TBD__
+
+## Others ...
+
+__TBD__
+
+## Other packages
 
 __TBD__
 
