@@ -106,7 +106,16 @@ The most critical concept to understand is the concept of __grob__. A __grob__ i
 - added or removed from larger grid objects including ggplot objects and 
 - drawn on a graphic device when a grid graphic plot is printed.
 
-Possible __grobs__ that can be created include circles, lines, points, rectangles, polygons, etc. Once a __grob__ is created, it can be modified (using the `editGrob` function) and then drawn (using the `grid.draw` function). See examples below.
+Possible __grobs__ that can be created include circles, lines, points, rectangles, polygons, etc. Once a __grob__ is created, it can be modified (using the `editGrob` function) and then drawn (using the `grid.draw` function). 
+
+Most of these functions accepts as arguments the location where the glob should be places. As an examples the `circleGrob` accepts the following arguments (see `?circleGrob` for more details):
+
+- `x`, a numeric vectors specifying the x location (center of the circle)
+- `y`, a numeric vectors specifying the y location (center of the circle)
+- `r`, , a numeric vectors specifying the radius of the circle
+- `default.units`, a string indicating the default units to use. 
+
+See examples below for some examples. 
 
 
 ```r
@@ -157,10 +166,8 @@ More grob objects can be plot on the same device as part of the same visualizati
 grid.newpage() # Erase/ clear the current device
 
 outer_rectangle <- rectGrob()
-my_circle <- circleGrob(x = 0.5, y = 0.5, r = 0.4, 
-                        gp = gpar(col = "blue", lty = 2))
-my_rect <- rectGrob(width = 0.9, height = 0.2,
-                    gp = gpar(col = "red", lty = 3))
+my_circle <- circleGrob(x = 0.5, y = 0.5, r = 0.4)
+my_rect <- rectGrob(width = 0.9, height = 0.2)
 
 grid.draw(outer_rectangle)
 grid.draw(my_circle)
@@ -186,6 +193,30 @@ grid.draw(curve_3)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExample2-1.png)<!-- -->
 
+__A special argument: `gp`__
+
+All these functions accept a `gp` argument, defined as 
+
+> "... an object of class gpar, typically the output from a call to the function gpar. This is basically a list of graphical parameter settings." (from R Documentation)
+
+The `gp` argument is used ot control some aspects of the graphical parameter settings like colour of lines and borders, the colour for fillings of rectangles and polygons, line type, trasparency, .... To seee the list of the valid apsects that can be controlled using the `gp` argument see `?gpar` help page.
+
+
+```r
+grid.newpage() # Erase/ clear the current device
+
+outer_rectangle <- rectGrob()
+my_circle <- circleGrob(x = 0.5, y = 0.5, r = 0.4, 
+                        gp = gpar(col = "black", lty = 1, fill = "blue"))
+my_rect <- rectGrob(width = 0.9, height = 0.2,
+                    gp = gpar(col = "black", lty = 1, fill = "red"))
+
+grid.draw(outer_rectangle)
+grid.draw(my_circle)
+grid.draw(my_rect)
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExampleWith_gp-1.png)<!-- -->
 
 
 ##### Viewports
@@ -206,6 +237,30 @@ __TBD__
 
 __TBD__
 
+# Session Info
+
+
+```r
+sessionInfo()
+## R version 3.3.3 (2017-03-06)
+## Platform: x86_64-apple-darwin13.4.0 (64-bit)
+## Running under: macOS Sierra 10.12.6
+## 
+## locale:
+## [1] no_NO.UTF-8/no_NO.UTF-8/no_NO.UTF-8/C/no_NO.UTF-8/no_NO.UTF-8
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## loaded via a namespace (and not attached):
+##  [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.3    
+##  [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.12    stringi_1.1.5  
+##  [9] rmarkdown_1.6   knitr_1.17      stringr_1.2.0   digest_0.6.12  
+## [13] evaluate_0.10.1
+```
+
+
 # References
 
 [1] "The grid package" chapter in "[Mastering Software Development in R](http://rdpeng.github.io/RProgDA/the-grid-package.html)" by Roger D. Peng, Sean Cross and Brooke Anderson, 2017  
@@ -216,5 +271,5 @@ __TBD__
 
 [4] "[Basic plotting with R and ggplot2](https://pparacch.github.io/2017/07/06/plotting_in_R_ggplot2_part_1.html)", Part 1  
 [5] "['ggplot2', essential concepts](https://pparacch.github.io/2017/07/14/plotting_in_R_ggplot2_part_2.html)", Part 2  
-[6] "[Guidelines for good plots](https://pparacch.github.io/2017/07/18/plotting_in_R_ggplot2_part_3.html)", Part 3
+[6] "[Guidelines for good plots](https://pparacch.github.io/2017/07/18/plotting_in_R_ggplot2_part_3.html)", Part 3  
 [7] "[How to work with maps](https://pparacch.github.io/2017/08/28/plotting_in_R_ggplot2_part_4.html)", Part 4
