@@ -199,7 +199,7 @@ All these functions accept a `gp` argument, defined as
 
 > "... an object of class gpar, typically the output from a call to the function gpar. This is basically a list of graphical parameter settings." (from R Documentation)
 
-The `gp` argument is used ot control some aspects of the graphical parameter settings like colour of lines and borders, the colour for fillings of rectangles and polygons, line type, trasparency, .... To seee the list of the valid apsects that can be controlled using the `gp` argument see `?gpar` help page.
+The `gp` argument is used to control some aspects of the graphical parameter settings like colour of lines and borders, the colour for fillings of rectangles and polygons, line type, trasparency, .... To seee the list of the valid apsects that can be controlled using the `gp` argument see `?gpar` help page.
 
 
 ```r
@@ -227,7 +227,13 @@ __TBD__
 
 __TBD__
 
+##### `ggplot2` and the `grid` system
+
+__TBD__
+
 ##### Others ...
+
+__TBD__
 
 ### Other packages
 
