@@ -216,9 +216,70 @@ grid.draw(my_rect)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExampleWith_gp-1.png)<!-- -->
 
-#### The `gtree` object
+#### The `gTree` object
 
-__TBD__
+A `gTree` object is a __grob__ that can have other __grobs__ as children. It is useful to create __grobs__ that are made of multiple elements (e.g. like a scatterplot). When it is drawn, all of its children are drawn. See the example below...
+
+
+```r
+grid.newpage() # Erase/ clear the current device
+circle_1_1 <- circleGrob(name = "circle_1_1", 
+                         x = 0.1, y = 0.8, r = 0.1)
+circle_1_2 <- circleGrob(name = "circle_1_2", 
+                         x = 0.1, y = 0.8, r = 0.05,
+                         gp = gpar(fill = "red"))
+circle_1 <- gTree(name = "circle_1_tree", children = gList(circle_1_1, circle_1_2))
+
+
+circle_2_1 <- circleGrob(x = 0.9, y = 0.8, r = 0.1)
+circle_2_2 <- circleGrob(x = 0.9, y = 0.8, r = 0.05,
+                         gp = gpar(fill = "red"))
+circle_2 <- gTree(children = gList(circle_2_1, circle_2_2))
+
+circle_3_1 <- circleGrob(x = 0.5, y = 0.2, r = 0.1)
+circle_3_2 <- circleGrob(x = 0.5, y = 0.2, r = 0.05,
+                         gp = gpar(fill = "red"))
+circle_3 <- gTree(children = gList(circle_3_1, circle_3_2))
+
+line_1 <- linesGrob(x = c(0.1, 0.5), 
+                    y = c(0.8,0.6),
+                    gp = gpar(lwd = 4))
+line_2 <- linesGrob(x = c(0.9, 0.5), 
+                    y = c(0.8,0.6),
+                    gp = gpar(lwd = 4))
+line_3 <- linesGrob(x = c(0.5, 0.5), 
+                    y = c(0.6,0.2),
+                    gp = gpar(lwd = 4))
+
+flux_capacitator <- gTree(
+  children = gList(circle_1, circle_2, circle_3,
+                   line_1, line_2, line_3)
+  )
+grid.draw(flux_capacitator)
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/gTreeExample-1.png)<!-- -->
+
+The function `grid.ls()` can be used to have a listing of the grobs that are part of the structure. __Note__  how the __grobs__ __name__ is used in the returned listing, if a `name` parameter was provided when creating a __grob__ such name is used to identify the grob in the listing (e.g. the __circle_1__ `gTree` and its children).
+
+
+```r
+grid.ls(flux_capacitator)
+## GRID.gTree.30
+##   circle_1_tree
+##     circle_1_1
+##     circle_1_2
+##   GRID.gTree.23
+##     GRID.circle.21
+##     GRID.circle.22
+##   GRID.gTree.26
+##     GRID.circle.24
+##     GRID.circle.25
+##   GRID.lines.27
+##   GRID.lines.28
+##   GRID.lines.29
+```
+
 
 ### Viewports
 
