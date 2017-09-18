@@ -3,7 +3,7 @@ Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`
 
 
 
-The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1].
+The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [xx].
 
 
 ```r
@@ -28,7 +28,7 @@ The `ggplot2` package is built on top of the `grid` graphic system. And the `gri
 
 ## The `grid` package and the `grid` graphic system
 
-As stated in the "Introduction to grid" vignette [3]  
+As stated in the "Introduction to grid" vignette [xx]  
 
 > "__grid__ is a low-level graphics system which provides a great deal of control and flexibility in the appearance and arrangement of graphical output. grid does not provide high-level functions which create complete plots. What it does provide is a basis for developing such high-level functions (e.g., the lattice and ggplot2 packages), the facilities for customising and manipulating lattice output, the ability to produce high-level plots or non-statistical images from scratch, and the ability to add sophisticated annotations to the output from base graphics functions (see the gridBase package)."
 
@@ -281,9 +281,98 @@ grid.ls(flux_capacitator)
 ```
 
 
-### Viewports
+### __Viewports__
 
-__TBD__
+A __viewport_`__ is a rectangular region on a graphic device, a smaller working space within the larger plot. As stated in the "grid Graphics" vignette [xx], a __viewport__ is defined as a graphics region that you can move into and out of to customize plots.
+
+Using the `grid` graphic system, plots can be created making __viewports__ (nested viewports), navigating into them, drawing grobs and then moving to a different __viewport__, so on and on.
+
+A __viewport__ can be created using the `Viewport` function (see `?Viewport` to see accepted arguments). The `pushViewport()` is used to navigate into a viewport and the `popViewport()` is used to navigate out of the current viewport. See exampe below on how to use viewports
+
+
+```r
+grid.newpage() # Erase/ clear the current device
+grid.draw(rectGrob())
+
+viewport_1 <- viewport(x = 0.5, y = 0.5,
+                             width = 0.5, height = 0.5,
+                             just = c("left", "bottom"))
+
+viewport_2 <- viewport(x = 0.0, y = 0.0,
+                             width = 0.5, height = 0.5,
+                             just = c("left", "bottom"))
+
+viewport_3 <- viewport(x = 0.5, y = 0.5,
+                             width = 0.1, height = 0.1,
+                             just = c("center", "center"))
+
+pushViewport(viewport_1)
+grid.draw(rectGrob())
+grid.draw(flux_capacitator)
+popViewport()
+
+pushViewport(viewport_2)
+grid.draw(rectGrob())
+grid.draw(flux_capacitator)
+popViewport()
+
+pushViewport(viewport_3)
+grid.draw(rectGrob())
+grid.draw(flux_capacitator)
+popViewport()
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/viewportExample-1.png)<!-- -->
+
+```r
+
+grid.ls()
+## GRID.rect.31
+## GRID.rect.32
+## GRID.gTree.30
+##   circle_1_tree
+##     circle_1_1
+##     circle_1_2
+##   GRID.gTree.23
+##     GRID.circle.21
+##     GRID.circle.22
+##   GRID.gTree.26
+##     GRID.circle.24
+##     GRID.circle.25
+##   GRID.lines.27
+##   GRID.lines.28
+##   GRID.lines.29
+## GRID.rect.33
+## GRID.gTree.30
+##   circle_1_tree
+##     circle_1_1
+##     circle_1_2
+##   GRID.gTree.23
+##     GRID.circle.21
+##     GRID.circle.22
+##   GRID.gTree.26
+##     GRID.circle.24
+##     GRID.circle.25
+##   GRID.lines.27
+##   GRID.lines.28
+##   GRID.lines.29
+## GRID.rect.34
+## GRID.gTree.30
+##   circle_1_tree
+##     circle_1_1
+##     circle_1_2
+##   GRID.gTree.23
+##     GRID.circle.21
+##     GRID.circle.22
+##   GRID.gTree.26
+##     GRID.circle.24
+##     GRID.circle.25
+##   GRID.lines.27
+##   GRID.lines.28
+##   GRID.lines.29
+```
+
+Note that the `grid.ls()` function can be used to list all the elements of the plot/ graphic in the current graphic device if created using the `grid` graphic system.
 
 ### Coordinate systems
 
