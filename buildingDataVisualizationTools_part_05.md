@@ -260,7 +260,7 @@ grid.draw(flux_capacitator)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/gTreeExample-1.png)<!-- -->
 
-The function `grid.ls()` can be used to have a listing of the grobs that are part of the structure. __Note__  how the __grobs__ __name__ is used in the returned listing, if a `name` parameter was provided when creating a __grob__ such name is used to identify the grob in the listing (e.g. the __circle_1__ `gTree` and its children).
+The function `grid.ls()` can be used to have a listing of the grobs that are part of the structure in the current graphic device. __Note__  how the __grobs__ __name__ is used in the returned listing, if a `name` parameter was provided when creating a __grob__ such name is used to identify the grob in the listing (e.g. the __circle_1__ `gTree` and its children).
 
 
 ```r
@@ -283,96 +283,87 @@ grid.ls(flux_capacitator)
 
 ### __Viewports__
 
-A __viewport_`__ is a rectangular region on a graphic device, a smaller working space within the larger plot. As stated in the "grid Graphics" vignette [xx], a __viewport__ is defined as a graphics region that you can move into and out of to customize plots.
+A __viewport__ is a rectangular region that provides a __context__ for drawing, specifically, 
 
-Using the `grid` graphic system, plots can be created making __viewports__ (nested viewports), navigating into them, drawing grobs and then moving to a different __viewport__, so on and on.
+- a __geometric context__ consisting in a coordinate system for location and 
+- a __graphical context__ consisting of explicit graphical parameter settings to control the appearance of the output.
 
-A __viewport__ can be created using the `Viewport` function (see `?Viewport` to see accepted arguments). The `pushViewport()` is used to navigate into a viewport and the `popViewport()` is used to navigate out of the current viewport. See exampe below on how to use viewports
+As stated in the "grid Graphics" vignette [xx], a __viewport__ is defined as a graphics region that you can __move into and out__ of to customize plots. 
+
+By default `grid` creates a __root viewport__ that correspond to the entire device, so the actual drawing is within the full device till __another viewport__ is added (creating a viewport tree). __There is always one and only one current viewport at any time__.
+
+#### How to create a viewport
+
+A __viewport__ can be created using the `Viewport` function. A __viewport__ has a location (`x, y` arguments), a size (`width, height` arguments) and a justification (`just` argument) - see `?Viewport` for more information. No region is created on the device till the viewport is navigated into. 
 
 
 ```r
 grid.newpage() # Erase/ clear the current device
-grid.draw(rectGrob())
-
 viewport_1 <- viewport(x = 0.5, y = 0.5,
-                             width = 0.5, height = 0.5,
-                             just = c("left", "bottom"))
+                       width = 0.5, height = 0.5,
+                       just = c("left", "bottom"))
 
-viewport_2 <- viewport(x = 0.0, y = 0.0,
-                             width = 0.5, height = 0.5,
-                             just = c("left", "bottom"))
+# viewport_1 is a "viewport" object
+# No region has been actually created on the device
+viewport_1
+## viewport[GRID.VP.3]
+class(viewport_1)
+## [1] "viewport"
+```
 
-viewport_3 <- viewport(x = 0.5, y = 0.5,
-                             width = 0.1, height = 0.1,
-                             just = c("center", "center"))
+#### How to work with viewports
+
+Using the `grid` graphic system, plots can be created using __viewports__ (viewports and nested viewports), specifically creating new viewports, navigating into them and drawing grobs and then moving to a different viewport, so on and on.
+
+The `pushViewport()` and `popViewport()` functions can be used to navigate into a viewport (changing the current viewport), and to navigate out of the current viewport.  When a viewport is popped, the drawing context reverts to the parent viewport and the viewport is removed from the device.
+
+
+```r
+grid.newpage() # Erase/ clear the current device
+# By default a root viewport is created
+# and set as the current one
+
+# Create a new viewport
+viewport_1 <- viewport(name = "vp1",
+                       width = 0.5, height = 0.3,
+                       angle = 10)
+
+# Working on the root viewport
+grid.draw(rectGrob(name = "root_rect"))
+grid.draw(textGrob(name = "root_text",
+          "Board", x = unit(1, "mm"), 
+          y = unit(1, "npc") - unit(1, "mm"),
+          just = c("left", "top")))
+
+# Move into the created viewport
+# Current viewport is switch to vp1
+pushViewport(viewport_1)
+# Draw into the current viewport
+grid.draw(rectGrob(name = "vp1_rect"))
+grid.draw(textGrob(name = "vp1_text",
+          "Task 1", x = unit(1, "mm"), 
+          y = unit(1, "npc") - unit(1, "mm"),
+          just = c("left", "top")))
 
 pushViewport(viewport_1)
-grid.draw(rectGrob())
-grid.draw(flux_capacitator)
+# Draw into the current viewport
+grid.draw(rectGrob(name = "vp1_vp1_rect"))
+grid.draw(textGrob(name = "vp1_vp1_text",
+          "Task 1", x = unit(1, "mm"), 
+          y = unit(1, "npc") - unit(1, "mm"),
+          just = c("left", "top")))
+# Move out of the current viewport 
+# back to the root (set as current)
 popViewport()
 
-pushViewport(viewport_2)
-grid.draw(rectGrob())
-grid.draw(flux_capacitator)
-popViewport()
-
-pushViewport(viewport_3)
-grid.draw(rectGrob())
-grid.draw(flux_capacitator)
+# Move out of the current viewport 
+# back to the root (set as current)
 popViewport()
 ```
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/viewportExample-1.png)<!-- -->
 
-```r
-
-grid.ls()
-## GRID.rect.31
-## GRID.rect.32
-## GRID.gTree.30
-##   circle_1_tree
-##     circle_1_1
-##     circle_1_2
-##   GRID.gTree.23
-##     GRID.circle.21
-##     GRID.circle.22
-##   GRID.gTree.26
-##     GRID.circle.24
-##     GRID.circle.25
-##   GRID.lines.27
-##   GRID.lines.28
-##   GRID.lines.29
-## GRID.rect.33
-## GRID.gTree.30
-##   circle_1_tree
-##     circle_1_1
-##     circle_1_2
-##   GRID.gTree.23
-##     GRID.circle.21
-##     GRID.circle.22
-##   GRID.gTree.26
-##     GRID.circle.24
-##     GRID.circle.25
-##   GRID.lines.27
-##   GRID.lines.28
-##   GRID.lines.29
-## GRID.rect.34
-## GRID.gTree.30
-##   circle_1_tree
-##     circle_1_1
-##     circle_1_2
-##   GRID.gTree.23
-##     GRID.circle.21
-##     GRID.circle.22
-##   GRID.gTree.26
-##     GRID.circle.24
-##     GRID.circle.25
-##   GRID.lines.27
-##   GRID.lines.28
-##   GRID.lines.29
-```
-
-Note that the `grid.ls()` function can be used to list all the elements of the plot/ graphic in the current graphic device if created using the `grid` graphic system.
+Another way to change the current viewport is by using the `upViewport()` and `downViewport()` functions. The `upViewport()` function is similar to `popViewport()`with the difference that `upViewport()` does not remove the current viewport from the device (more efficient and fast).
 
 ### Coordinate systems
 
