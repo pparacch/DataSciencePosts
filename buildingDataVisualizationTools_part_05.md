@@ -3,7 +3,7 @@ Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`
 
 
 
-The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [xx].
+The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1].
 
 
 ```r
@@ -14,21 +14,17 @@ library(grid)
 
 # Introduction
 
-__TODO__ Set up a scenario for...  
-__TODO__ Add an example on how to add details into your graphs/ visualization using ggplot2 and grid  
-    __??__ Example from the course
-
-# How to create custom graphics/ visualizations
-
-The core package behind the graphics capabilities in R is the `grDevices` package, considered as the __engine__ for graphics/ visualizations in R. Two packages are built directly on this engine, the `graphics` and the `grid` packages, representing two __different__ and __incompatible__ graphic systems (see picture below for more information).
+The __core package__, supporting the __graphics capabilities in R__, is the `grDevices` package. Two packages are built directly on this engine, the `graphics` and the `grid` packages - two __different__ and __incompatible__ graphic systems (see picture below for more information).
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/r_graphics.png)<!-- -->
 
-The `ggplot2` package is built on top of the `grid` graphic system. And the `grid` package provides the primitive functions that are used by `ggplot2` for creating and drawing complete plots. While it is not required to interact directly with the `grid` package, it is necessary to understand how it does work in order to be able to add customization not supported by `ggplot2`.
+The `ggplot2` package is built on top of the `grid` graphic system. The `grid` package provides the primitive functions that are used by `ggplot2` for creating and drawing complete plots.
+
+__While it is not required to interact directly with the `grid` package, it is necessary to understand how it does work in order to be able to create and add customizations not supported by `ggplot2`__.
 
 ## The `grid` package and the `grid` graphic system
 
-As stated in the "Introduction to grid" vignette [xx]  
+As stated in [2]  
 
 > "__grid__ is a low-level graphics system which provides a great deal of control and flexibility in the appearance and arrangement of graphical output. grid does not provide high-level functions which create complete plots. What it does provide is a basis for developing such high-level functions (e.g., the lattice and ggplot2 packages), the facilities for customising and manipulating lattice output, the ability to produce high-level plots or non-statistical images from scratch, and the ability to add sophisticated annotations to the output from base graphics functions (see the gridBase package)."
 
@@ -53,45 +49,46 @@ ls(name = "package:grid", pattern = ".*Grob")
 ## [33] "xsplineGrob"   "yaxisGrob"
 ```
 
-__Note!__ It is possible to use these low-level functions to create complete plots (not recommended), see the following (grid) scatterplot example (adapted from [2]).
+It is possible to combine these low-level functions to create complete plots (__even if not not recommended__). See the following example (adapted from [2])
 
 
 ```r
-# create a scatterplots equivalent to 
-# plot(1:10)
+# scatterplot example
+# create scatterplot plot(1:10) 
+# using the grid package
 
 # create and draw a rectangle - line type = dashed
-gRect1 <- grid::rectGrob(gp = grid::gpar(lty = "dashed"))
+gRect1 <- rectGrob(gp = gpar(lty = "dashed"))
 grid.draw(gRect1)
 # create the data points
 x <- y <- 1:10
 # create a viewport providing the margins as number of text lines
-vp1 <- grid::plotViewport(c(5.1,4.1,4.1,2.1))
+vp1 <- plotViewport(c(5.1,4.1,4.1,2.1))
 # navigate into the created viewport
-grid::pushViewport(vp1)
+pushViewport(vp1)
 # create a viewport with x and y scales
 # based on provided values
-dvp1 <- grid::dataViewport(x,y)
+dvp1 <- dataViewport(x,y)
 # navigate into the created viewport
-grid::pushViewport(dvp1)
+pushViewport(dvp1)
 # create and draw a rectangle
-gRect2 <- grid::rectGrob()
+gRect2 <- rectGrob()
 grid.draw(gRect2)
 # create and draws the x and y axis
-gXaxis <- grid::xaxisGrob()
+gXaxis <- xaxisGrob()
 grid.draw(gXaxis)
-gYaxis <- grid::yaxisGrob()
+gYaxis <- yaxisGrob()
 grid.draw(gYaxis)
 # create and draw the data points
-gPoints <- grid::pointsGrob(x,y)
+gPoints <- pointsGrob(x,y)
 grid.draw(gPoints)
 # create and draw text
-gYText <- grid::textGrob("y = 1:10", x = grid::unit(-3, "lines"), rot = 90)
+gYText <- textGrob("y = 1:10", x = unit(-3, "lines"), rot = 90)
 grid.draw(gYText)
-gXText <- grid::textGrob("x = 1:10", y = grid::unit(-3, "lines"))
+gXText <- textGrob("x = 1:10", y = unit(-3, "lines"))
 grid.draw(gXText)
 # exit the 2 viewports
-grid::popViewport(2)
+popViewport(2)
 ```
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/scatterplotExample-1.png)<!-- -->
@@ -100,14 +97,18 @@ grid::popViewport(2)
 
 ### __Grobs__: graphical objects
 
-The most critical concept to understand is the concept of __grob__. A __grob__ is a __grid graphical object__ that can be created, changed and plotted using the grid graphic functions. __Grobs__ can be created and then 
+The most critical concept to understand is the __grob__. A __grob__ is a __grid graphical object__ that can be created, changed and plotted using the grid graphic functions. __Grobs__ are 
 
-- added or removed from larger grid objects including ggplot objects and 
-- drawn on a graphic device when a grid graphic plot is printed.
+- created,
+- modified,
+- added or removed from larger grid objects (optionally) and 
+- drawn on a graphics device.
 
-Possible __grobs__ that can be created include circles, lines, points, rectangles, polygons, etc. Once a __grob__ is created, it can be modified (using the `editGrob` function) and then drawn (using the `grid.draw` function). 
+![](buildingDataVisualizationTools_part_05_files/figure-html/r_grob.png)<!-- -->
 
-Most of these functions accepts as arguments the location where the glob should be places. As an examples the `circleGrob` accepts the following arguments (see `?circleGrob` for more details):
+Possible __grobs__ include circles, lines, points, rectangles, polygons, etc. Once a __grob__ is created, it can be modified (using the `editGrob` function) and then drawn (using the `grid.draw` function) on a graphics device. 
+
+When creating a __grob__ the location where the grob should be places/ located must be provided. As an examples the `circleGrob` accepts the following arguments (see `?circleGrob` for more details):
 
 - `x`, a numeric vectors specifying the x location (center of the circle)
 - `y`, a numeric vectors specifying the y location (center of the circle)
@@ -120,7 +121,6 @@ See examples below for some examples.
 ```r
 # Create a circle grob object and draw it in the current device
 # See ?circleGrob for possible arguments and default values
-
 grid.newpage() # Erase/ clear the current device
 the_circle <- circleGrob() # Create the circe grob
 grid.draw(the_circle) # Draw the grob (current device)
@@ -158,7 +158,7 @@ grid.draw(the_circle)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/circleExample3-1.png)<!-- -->
 
-More grob objects can be plot on the same device as part of the same visualization/ graph, your fantasy becomes your limit ...
+More grob objects can be plot on the same device as part of the same visualization/ graph, __your fantasy becomes your limit__ ...
 
 
 ```r
@@ -191,13 +191,17 @@ grid.draw(curve_3)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/grobsExample2-1.png)<!-- -->
 
-#### A special argument: `gp`
+#### Controlling the appearance of a grob: the argument: `gp`
 
-All these functions accept a `gp` argument, defined as 
+All these functions, used to create __grobs__, accept a `gp` argument that is used to __control some aspects of the graphical parameter__ like 
 
-> "... an object of class gpar, typically the output from a call to the function gpar. This is basically a list of graphical parameter settings." (from R Documentation)
+- colour of lines and borders, 
+- colour for fillings of rectangles and polygons, 
+- line type, 
+- trasparency, 
+- etc. 
 
-The `gp` argument is used to control some aspects of the graphical parameter settings like colour of lines and borders, the colour for fillings of rectangles and polygons, line type, trasparency, .... To seee the list of the valid apsects that can be controlled using the `gp` argument see `?gpar` help page.
+To see the list of the possible aspects that can be controlled using the `gp` argument see the `?gpar` help page.
 
 
 ```r
@@ -218,7 +222,7 @@ grid.draw(my_rect)
 
 #### The `gTree` object
 
-A `gTree` object is a __grob__ that can have other __grobs__ as children. It is useful to create __grobs__ that are made of multiple elements (e.g. like a scatterplot). When it is drawn, all of its children are drawn. See the example below...
+A `gTree` object is a __grob__ that can have other __grobs__ as children. It is useful to create __grobs__ that are made of multiple elements (e.g. like a scatterplot). When a `gTree` object is drawn, all of its children are drawn. See the example below...
 
 
 ```r
@@ -250,22 +254,24 @@ line_2 <- linesGrob(x = c(0.9, 0.5),
 line_3 <- linesGrob(x = c(0.5, 0.5), 
                     y = c(0.6,0.2),
                     gp = gpar(lwd = 4))
+the_text <- textGrob("Flux Capacitator",
+                     x = 0.5, y = 0.9)
 
 flux_capacitator <- gTree(
   children = gList(circle_1, circle_2, circle_3,
-                   line_1, line_2, line_3)
+                   line_1, line_2, line_3, the_text)
   )
 grid.draw(flux_capacitator)
 ```
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/gTreeExample-1.png)<!-- -->
 
-The function `grid.ls()` can be used to have a listing of the grobs that are part of the structure in the current graphic device. __Note__  how the __grobs__ __name__ is used in the returned listing, if a `name` parameter was provided when creating a __grob__ such name is used to identify the grob in the listing (e.g. the __circle_1__ `gTree` and its children).
+The function `grid.ls()` can be used to have a listing of the grobs that are part of the structure in the current graphic device. __Note__  how the grobs __name__ is used in the returned listing, if a `name` parameter was provided when creating a __grob__ such name is used to identify the grob in the listing (e.g. the __circle_1__ `gTree` and its children).
 
 
 ```r
 grid.ls(flux_capacitator)
-## GRID.gTree.30
+## GRID.gTree.31
 ##   circle_1_tree
 ##     circle_1_1
 ##     circle_1_2
@@ -278,6 +284,7 @@ grid.ls(flux_capacitator)
 ##   GRID.lines.27
 ##   GRID.lines.28
 ##   GRID.lines.29
+##   GRID.text.30
 ```
 
 
@@ -288,9 +295,7 @@ A __viewport__ is a rectangular region that provides a __context__ for drawing, 
 - a __geometric context__ consisting in a coordinate system for location and 
 - a __graphical context__ consisting of explicit graphical parameter settings to control the appearance of the output.
 
-As stated in the "grid Graphics" vignette [xx], a __viewport__ is defined as a graphics region that you can __move into and out__ of to customize plots. 
-
-By default `grid` creates a __root viewport__ that correspond to the entire device, so the actual drawing is within the full device till __another viewport__ is added (creating a viewport tree). __There is always one and only one current viewport at any time__.
+As stated in the "grid Graphics" vignette [xx], a __viewport__ is defined as a graphics region that you can __move into and out__ of to customize plots. By default `grid` creates a __root viewport__ that correspond to the entire device, so the actual drawing is within the full device till __another viewport__ is added (creating a viewport tree). __There is always one and only one current viewport at any time__.
 
 #### How to create a viewport
 
@@ -315,7 +320,9 @@ class(viewport_1)
 
 Using the `grid` graphic system, plots can be created using __viewports__ (viewports and nested viewports), specifically creating new viewports, navigating into them and drawing grobs and then moving to a different viewport, so on and on.
 
-The `pushViewport()` and `popViewport()` functions can be used to navigate into a viewport (changing the current viewport), and to navigate out of the current viewport.  When a viewport is popped, the drawing context reverts to the parent viewport and the viewport is removed from the device.
+![](buildingDataVisualizationTools_part_05_files/figure-html/r_viewport.png)<!-- -->
+
+The `pushViewport()` and `popViewport()` functions can be used, respectively, to navigate into a viewport (changing the current viewport), and to navigate out of the current viewport.  When a viewport is popped, the drawing context reverts to the parent viewport and the viewport is removed from the device.
 
 
 ```r
@@ -412,12 +419,16 @@ sessionInfo()
 # References
 
 [1] "The grid package" chapter in "[Mastering Software Development in R](http://rdpeng.github.io/RProgDA/the-grid-package.html)" by Roger D. Peng, Sean Cross and Brooke Anderson, 2017  
-[2] Vignette ["grid Graphics"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/grid.pdf), by Paul Murrell, April 2017 
-[3] "R Graphics" 2nd Edition, by Paul Murrell, September 2015
+[2] Vignette ["Introduction to grid"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/grid.pdf), by Paul Murrell, April 2017 
+[3] Vignette ["Working with grid viewports"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/viewports.pdf), by Paul Murrell, November 2016
 
-## Previous "Building Data Visualization Tools" blogs
+__Interesting book__:
 
-[4] "[Basic plotting with R and ggplot2](https://pparacch.github.io/2017/07/06/plotting_in_R_ggplot2_part_1.html)", Part 1  
-[5] "['ggplot2', essential concepts](https://pparacch.github.io/2017/07/14/plotting_in_R_ggplot2_part_2.html)", Part 2  
-[6] "[Guidelines for good plots](https://pparacch.github.io/2017/07/18/plotting_in_R_ggplot2_part_3.html)", Part 3  
-[7] "[How to work with maps](https://pparacch.github.io/2017/08/28/plotting_in_R_ggplot2_part_4.html)", Part 4
+- "R Graphics" 2nd Edition, by Paul Murrell, September 2015
+
+__Previous "Building Data Visualization Tools" blogs__: 
+
+- Part 1: "[Basic plotting with R and ggplot2](https://pparacch.github.io/2017/07/06/plotting_in_R_ggplot2_part_1.html)"  
+- Part 2: "['ggplot2', essential concepts](https://pparacch.github.io/2017/07/14/plotting_in_R_ggplot2_part_2.html)"  
+- Part 3: "[Guidelines for good plots](https://pparacch.github.io/2017/07/18/plotting_in_R_ggplot2_part_3.html)"  
+- Part 4: "[How to work with maps](https://pparacch.github.io/2017/08/28/plotting_in_R_ggplot2_part_4.html)"  
