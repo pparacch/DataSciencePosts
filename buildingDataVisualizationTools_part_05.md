@@ -5,6 +5,11 @@ Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`
 
 The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1].
 
+Required packages:
+
+- the `grid` package,
+- ...
+
 
 ```r
 # Note that the grid package is a base package
@@ -287,7 +292,6 @@ grid.ls(flux_capacitator)
 ##   GRID.text.30
 ```
 
-
 ### __Viewports__
 
 A __viewport__ is a rectangular region that provides a __context__ for drawing, specifically, 
@@ -295,7 +299,9 @@ A __viewport__ is a rectangular region that provides a __context__ for drawing, 
 - a __geometric context__ consisting in a coordinate system for location and 
 - a __graphical context__ consisting of explicit graphical parameter settings to control the appearance of the output.
 
-As stated in the "grid Graphics" vignette [xx], a __viewport__ is defined as a graphics region that you can __move into and out__ of to customize plots. By default `grid` creates a __root viewport__ that correspond to the entire device, so the actual drawing is within the full device till __another viewport__ is added (creating a viewport tree). __There is always one and only one current viewport at any time__.
+As stated in the vignettes [2,3], a __viewport__ is defined as a graphics region that you can __move into and out__ of to customize plots. __Viewports__ can be created inside another __viewport__ and so on. 
+
+By default `grid` creates a __root viewport__ that correspond to the entire device, so the actual drawing is within the full device till __another viewport__ is added (creating a viewport tree). __There is always one and only one current viewport at any time__.
 
 #### How to create a viewport
 
@@ -374,23 +380,77 @@ Another way to change the current viewport is by using the `upViewport()` and `d
 
 ### Coordinate systems
 
-__TBD__
+When creating a __grid graphical object__ or a __viewport object__, the location of where this object should be located and its size must be provided (e.g. through `x`, `y`, `default.units` arguments). All drawing occurs relative to the current viewport and the location and size are used within that viewport to draw the object. 
+
+The `grid` graphic system provides different coordinate systems according to the used unit of measurement like
+
+- `npc`, the normalised paranet coordinates (the default) where 
+    - the bottom-lef as the location (0, 0) and 
+    - the top-right corner as location (1, 1);
+- `cm`, measurements in centimeters;
+- `inches`, measurements in inches;
+- `mm`, measurements in millimetres;
+- `points`, measurements in points;
+- `lines`, measurements in number of lines of text
+- `native`, measurements are relative to the `xscale` and `yscale` of the viewport
+- ...
+
+More information about coordinate systems can be found in the R documentation (see `?unit`). 
+
+__Picking the right units for this coordinate system will make it much easier to create the plot you want__, for example the `native` unit is often the most useful when creating extensions for ggplot2.
+
+The coordinate system to be used when locating an object is provided by the `unit` function (`unit([numeric vector], units = "native")`). Different values can be provided with different units of measurement for the same object.
+
+As example, a viewport with the x-scale going from 0 to 100 and the y-scale going from 0 to 10 (specified using `xscale` and `yscale` in `viewport`), the `native` unit can be used when locating a grob in that viewport on these scale values see example below
+
+
+```r
+grid.newpage()# Erase/ clear the current device
+# By default a root viewport is created
+# and set as the current one
+
+# Visualize the root viewport area 
+grid.draw(rectGrob())
+
+# Create a new viewport
+# default unit is set to "npc" so
+# location of the viewport is normalized (0,1)
+# with a xscale covering from 0 to 100
+vp_1 <- viewport(name = "vp1",
+                       width = 0.5, height = 0.5,
+                       just = c("center", "center"),
+                       xscale = c(0,100), yscale = c(0,10))
+# Navigate into the viewport
+pushViewport(vp_1)
+# Visualize the vp_1 area 
+grid.draw(rectGrob())
+
+# Draw some circles with location x, y , r (native)
+grid.draw(circleGrob(x = unit(0, "native"), y = unit(5, "native"),
+                     r = unit(5, "native"), gp = gpar(fill = "red")))
+grid.draw(circleGrob(x = unit(10, "native"), y = unit(5, "native"),
+                     r = unit(5, "native"), gp = gpar(fill = "orange")))
+grid.draw(circleGrob(x = unit(100, "native"), y = unit(5, "native"),
+                     r = unit(5, "native"), gp = gpar(fill = "green")))
+
+popViewport()
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/unitNativeExample-1.png)<!-- -->
 
 ## `ggplot2` and the `grid` system
 
 __TBD__
 
-## Others ...
-
-__TBD__
-
 ## Other packages
-
-__TBD__
 
 ### The `gridExtra` package
 
-__TBD__
+The `gridExtra` package provides useful extensions to the grid system focusing on higher-level functions to work with grid graphic objects. Interesting functions:
+
+- arranging multiple grobs on a page [4],
+- creating and manupilating layouts with graphical elements [5],
+- adding tabular data alongside graphics [6].
 
 # Session Info
 
@@ -419,8 +479,11 @@ sessionInfo()
 # References
 
 [1] "The grid package" chapter in "[Mastering Software Development in R](http://rdpeng.github.io/RProgDA/the-grid-package.html)" by Roger D. Peng, Sean Cross and Brooke Anderson, 2017  
-[2] Vignette ["Introduction to grid"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/grid.pdf), by Paul Murrell, April 2017 
-[3] Vignette ["Working with grid viewports"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/viewports.pdf), by Paul Murrell, November 2016
+[2] Vignette ["Introduction to grid"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/grid.pdf) by Paul Murrell, April 2017   
+[3] Vignette ["Working with grid viewports"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/viewports.pdf) by Paul Murrell, November 2016   
+[4] Vignette ["Arranging multiple grobs on a page"](https://cran.r-project.org/web/packages/gridExtra/vignettes/arrangeGrob.html) by Baptiste Auguie, September 2017  
+[5] Vignette ["(Unofficial) overview of gtable"](https://cran.r-project.org/web/packages/gridExtra/vignettes/gtable.html) by Baptiste Auguie, September 2017  
+[6] Vignette ["Displaying tables as grid graphics"](https://cran.r-project.org/web/packages/gridExtra/vignettes/tableGrob.html) by Baptiste Auguie, September 2017  
 
 __Interesting book__:
 
