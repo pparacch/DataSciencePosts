@@ -3,11 +3,14 @@ Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`
 
 
 
+---
+
 The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1].
 
 Required packages:
 
 - the `grid` package,
+- the `ggplot2` package,
 - ...
 
 
@@ -15,6 +18,10 @@ Required packages:
 # Note that the grid package is a base package
 # it is installed automatically when installing R
 library(grid)
+
+# If ggplot2 package is not installed
+# install.packages("ggplot2")
+library(ggplot2)
 ```
 
 # Introduction
@@ -23,9 +30,7 @@ The __core package__, supporting the __graphics capabilities in R__, is the `grD
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/r_graphics.png)<!-- -->
 
-The `ggplot2` package is built on top of the `grid` graphic system. The `grid` package provides the primitive functions that are used by `ggplot2` for creating and drawing complete plots.
-
-__While it is not required to interact directly with the `grid` package, it is necessary to understand how it does work in order to be able to create and add customizations not supported by `ggplot2`__.
+The `ggplot2` package is built on top of the `grid` graphic system. The `grid` package provides the primitive functions that are used by `ggplot2` for creating and drawing complete plots. __While it is not required to interact directly with the `grid` package, it is necessary to understand how it does work in order to be able to create and add customizations not supported by `ggplot2`__.
 
 ## The `grid` package and the `grid` graphic system
 
@@ -98,7 +103,7 @@ popViewport(2)
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/scatterplotExample-1.png)<!-- -->
 
-## The `grid` graphic system: basic concepts
+## The `grid` graphic system: __basic concepts__
 
 ### __Grobs__: graphical objects
 
@@ -378,7 +383,7 @@ popViewport()
 
 Another way to change the current viewport is by using the `upViewport()` and `downViewport()` functions. The `upViewport()` function is similar to `popViewport()`with the difference that `upViewport()` does not remove the current viewport from the device (more efficient and fast).
 
-### Coordinate systems
+### __Coordinate systems__
 
 When creating a __grid graphical object__ or a __viewport object__, the location of where this object should be located and its size must be provided (e.g. through `x`, `y`, `default.units` arguments). All drawing occurs relative to the current viewport and the location and size are used within that viewport to draw the object. 
 
@@ -438,9 +443,62 @@ popViewport()
 
 ![](buildingDataVisualizationTools_part_05_files/figure-html/unitNativeExample-1.png)<!-- -->
 
-## `ggplot2` and the `grid` system
+## `ggplot2` and the `grid` system: __customize `ggplot2` output__
 
-__TBD__
+It is possible to use low-level functions in `grid` to customize/ manipulate the `ggplot2` output. See the examples below.
+
+
+```r
+grid.newpage()# Erase/ clear the current device
+
+temp <- mtcars
+temp[temp$am == 0,]$am <- "automatic"
+temp[temp$am == 1,]$am <- "manual"
+temp$am <- as.factor(temp$am)
+
+basePlot <- ggplot(data = temp, mapping = aes(x = disp, y = mpg)) +
+  geom_point()
+
+grid.draw(ggplotGrob(basePlot))
+
+vp_1 <- viewport(x = 1, y = 1, 
+                 just = c("right", "top"),
+                 width = 0.5, height = 0.35)
+
+pushViewport(vp_1)
+miniPlot <- ggplot(data = temp, mapping = aes(x = am)) +
+  geom_bar() + xlab("Transmission") 
+grid.draw(ggplotGrob(miniPlot))
+popViewport()
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/customize_ggplot2_example_1-1.png)<!-- -->
+
+
+```r
+grid.newpage()# Erase/ clear the current device
+
+vp_1 <- viewport(x = 0,  
+                 just = "left",
+                 width = 1/3)
+
+pushViewport(vp_1)
+plot_r <- ggplot(data = temp, mapping = aes(x = am)) +
+  geom_bar() + xlab("Transmission") 
+grid.draw(ggplotGrob(plot_r))
+popViewport()
+
+vp_2 <- viewport(x = 1/3,   
+                 just = "left",
+                 width = 2/3)
+pushViewport(vp_2)
+plot_l <- ggplot(data = temp, mapping = aes(x = disp, y = mpg)) +
+  geom_point() 
+grid.draw(ggplotGrob(plot_l))
+popViewport()
+```
+
+![](buildingDataVisualizationTools_part_05_files/figure-html/customize_ggplot2_example_2-1.png)<!-- -->
 
 ## Other packages
 
@@ -468,11 +526,16 @@ sessionInfo()
 ## [1] grid      stats     graphics  grDevices utils     datasets  methods  
 ## [8] base     
 ## 
+## other attached packages:
+## [1] ggplot2_2.2.1
+## 
 ## loaded via a namespace (and not attached):
-##  [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.3    
-##  [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.12    stringi_1.1.5  
-##  [9] rmarkdown_1.6   knitr_1.17      stringr_1.2.0   digest_0.6.12  
-## [13] evaluate_0.10.1
+##  [1] Rcpp_0.12.12     digest_0.6.12    rprojroot_1.2    plyr_1.8.4      
+##  [5] gtable_0.2.0     backports_1.1.0  magrittr_1.5     evaluate_0.10.1 
+##  [9] scales_0.5.0     rlang_0.1.2      stringi_1.1.5    lazyeval_0.2.0  
+## [13] rmarkdown_1.6    labeling_0.3     tools_3.3.3      stringr_1.2.0   
+## [17] munsell_0.4.3    yaml_2.1.14      colorspace_1.3-2 htmltools_0.3.6 
+## [21] knitr_1.17       tibble_1.3.4
 ```
 
 
