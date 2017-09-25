@@ -3,7 +3,7 @@ title: "Building Data Visualization Tools (Part 5)"
 author: "Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`"
 output: 
   html_document: 
-    fig_width: 10
+    fig_width: 6
     keep_md: yes
     number_sections: yes
     toc: yes
