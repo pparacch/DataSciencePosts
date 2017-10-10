@@ -159,6 +159,127 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
 
 ```
 
+Sometimes there are calculations that need to be performed once for the dataset, not for each group.
+
+__TO_DO__ find out more information????
+
+```{r buildStatMoreComplexExample_1}
+
+StatDensityCommon <- ggproto("_class" = "StatDensityCommon", "_inherit" = Stat,
+                             required_aes = "x",
+                             setup_params = function(data, params){
+                                 print("Running set_up....")
+                                 if(!is.null(params$bandwidth)) return(params)
+                                 
+                                 xs <- split(data$x, data$group)
+                                 bws <- vapply(xs, bw.nrd0, numeric(1))
+                                 bw <- mean(bws)
+                                 message("Picking bandwidth of ", signif(bw, 3))
+                                 
+                                 params$bandwidth <- bw
+                                 print("End set_up....")
+                                 params
+                                 
+                             },
+                             
+                             compute_group = function(data, scales, bandwidth = 1){
+                                 print(paste("Running compute_group [", unique(data$group), "] ..."))
+                                 str(data)
+                                 print(bandwidth)
+                                 d <- density(data$x,bandwidth)
+                                 print("End compute_group....")
+                                 data.frame(x = d$x, y = d$y)
+                             })
+
+stat_densityCommon <- function(data = NULL, mapping = NULL, geom = "line",
+                               position = "identity", na.rm = FALSE, show.legend = NA,
+                               inherit.aes = T, bandwidth = NULL, ...){
+    layer(geom = geom,  stat = StatDensityCommon, data = data, mapping = mapping, position = position,
+          params = list(bandwidth = bandwidth, na.rm = na.rm, ...), inherit.aes = inherit.aes, show.legend = show.legend)
+}
+
+ggplot(data = mpg, mapping = aes(x = displ)) +
+    stat_densityCommon(bandwidth = 0.25)
+
+# Bandwidth is calculated from the data (once) 
+ggplot(data = mpg, mapping = aes(x = displ)) +
+    stat_densityCommon()
+
+
+ggplot(data = mpg, mapping = aes(x = displ, colour = drv)) +
+    stat_densityCommon()
+
+```
+
+Important aspects to consider: __variable names__ and __default aesthetics__. If you want to make a _stat_ usable with other _geoms_ we need to be careful with the chosen names.
+
+> If we want to make this stat usable with other geoms, we should return a variable called density instead of y. Then we can set up the default_aes to automatically map density to y, which allows the user to override it to use with different geoms.
+
+```{r buildStatMoreComplexExample_2}
+StatDensityCommon <- ggproto("StatDensityCommonE", Stat, 
+  required_aes = "x",
+  default_aes = aes(y = ..density..),
+
+  compute_group = function(data, scales, bandwidth = 1) {
+    print(paste("Running compute_group [", unique(data$group), "] ..."))
+    d <- density(data$x, bw = bandwidth)
+    print(range(d$x))
+    print(range(d$y))
+    print("End compute_group....")
+    data.frame(x = d$x, density = d$y)
+  }  
+)
+
+ggplot(mpg, aes(displ, drv, colour = ..density..)) + 
+  stat_densityCommon(bandwidth = 1, geom = "point")
+
+# Using this stat with the area geom doesn’t work quite right. 
+# The areas don’t stack on top of each other because each density 
+# is computed independently, and the estimated xs don’t line up.
+ggplot(mpg, aes(displ, fill = drv)) + 
+  stat_densityCommon(bandwidth = 1, geom = "area", position = "stack")
+```
+
+```{r buildStatMoreComplexExample_3}
+StatDensityCommon <- ggproto("StatDensityCommonF", Stat, 
+  required_aes = "x",
+  default_aes = aes(y = ..density..),
+  
+  setup_params = function(data, params){
+      print("Running set_up....")
+      min <- min(data$x) - 3 * params$bandwidth
+      max <- max(data$x) + 3 * params$bandwidth
+      print(paste("min:", min, "- max:", max, "- bw:", params$bandwidth))
+      print("End set_up....")
+      list(
+        bandwidth = params$bandwidth,
+        min = min,
+        max = max,
+        na.rm = params$na.rm
+      )
+  },
+  
+  compute_group = function(data, scales, min, max, bandwidth = 1) {
+    print(paste("Running compute_group [", unique(data$group), "] ..."))
+    d <- density(data$x, bw = bandwidth, from = min, to = max)
+    print(range(d$x))
+    print(range(d$y))
+    print("End compute_group....")
+    data.frame(x = d$x, density = d$y)
+  }  
+)
+
+ggplot(mpg, aes(displ, fill = drv)) + 
+  stat_densityCommon(bandwidth = 0.75, geom = "area", position = "stack")
+
+ggplot(mpg, aes(displ, drv, colour = ..density..)) + 
+  stat_densityCommon(bandwidth = 1, geom = "point")
+
+ggplot(mpg, aes(displ, drv, fill = ..density..)) + 
+  stat_densityCommon(bandwidth = 1, geom = "raster")
+```
+
+
 
 # Session Info
 
