@@ -3,7 +3,7 @@ title: "Building Data Visualization Tools (Part 6)"
 author: "Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`"
 output: 
   html_document: 
-    fig_width: 6
+    fig_width: 8
     keep_md: yes
     toc: yes
     toc_depth: 5
@@ -26,6 +26,8 @@ Required packages:
 # If ggplot2 package is not installed
 # install.packages("ggplot2")
 library(ggplot2)
+library(grid)
+library(gridExtra)
 ```
 
 # Building new graphical elements
@@ -34,7 +36,7 @@ Key elements in `ggplot2` are _geoms_ and _stats_, which allow to create interes
 
 Why do new graphic capabilities need to be created?
 
-- There is limited support in `ggplot2` for the type opf graphic capabilities needed (new feature).
+- There is limited support in `ggplot2` for the type of graphic capabilities needed (new feature).
 
 - The same plot needs to be created over and over and, the creation of the plot is quite complex (simplify a complex workflow).
 
@@ -46,12 +48,11 @@ The building of a new __geom__/ __stat__ feature follows a two step process:
 1. use the `ggplot2::ggproto()` function to create a new class corresponding to your new feature,
     - inheriting from the `Geom` or `Stat` class  
     
-2. implement the `geom_*` or `stat_*` function returning a layer that can be added to a plot created using the `ggplot()` function.
+2. implement the `geom_*` or `stat_*` function returning a layer that can be added to a plot previously created using the `ggplot()` function.
 
-All `ggplot2` objects are created using the __ggproto Object-Oriented system__ which allows the creation of mutable objects (for more info about ggproto see http://ggplot2.tidyverse.org/articles/extending-ggplot2.html).
+All `ggplot2` objects are created using the __ggproto Object-Oriented system__ which allows the creation of mutable objects (for more info about ggproto see http://ggplot2.tidyverse.org/articles/extending-ggplot2.html). See example below to see how to create a `ggproto` object ...
 
 ```{r simpleExampleWith_ggproto}
-
 A <- ggplot2::ggproto("_class" = "MyClass", "_inherit" = NULL,
                        x = 1,
                        inc = function(self){
@@ -69,9 +70,11 @@ A$inc()
 A$x
 ```
 
-## How to create a new stat
+## How to create a new __stat__
 
-All of the `stat_*` functions return a layer that contains a `Stat*` object. This object is responsible for rendering the data in the plot. Each `Stat*` object is a `ggproto` object and a `Stat` object, implementing some methods/ fields (see `?Stat` for more information).
+All of the `stat_*` functions return a layer that contains a `Stat*` object. This object is responsible for rendering the data in the plot. 
+
+Each `Stat*` class is a `ggproto` class and a `Stat` class, overriding some specific methods (see `?Stat` for more information).
 
 
 
@@ -279,6 +282,62 @@ ggplot(mpg, aes(displ, drv, fill = ..density..)) +
   stat_densityCommon(bandwidth = 1, geom = "raster")
 ```
 
+## How to create a new __geom__
+
+All of the `geom_*` functions return a layer that contains a `Geom*` object (instance of the `Geom*` class), responsible for rendering the data in the plot.  The `Geom*` class is a `ggproto` class and a `Geom` class, overriding some specific methods/ fields (see `?Geom` for more information).
+
+Specific methods/ fields are
+
+- `required_aes`, a character vector of needed aesthetics
+- `default_aes`, a list of default values for aesthetics
+- `draw_key`, a function used to draw key in the legend
+- either `draw_panel` or `draw_group` function returning a grid grob to be plotted
+
+
+The `draw_panel` function can be used when data is plot by panels and, each row in `data` represents an element in a panel. See examples below ...
+
+
+```{r aSimpleGeomByPanelExample}
+GeomMyPoint <- ggproto("_class" = "GeomMyPoint", Geom,
+                       required_aes = c("x", "y"),
+                       default_aes = aes(shape = 1),
+                       draw_key = draw_key_point,
+                       draw_panel = function(data, panel_scales, coord){
+                           # Transform the data first
+                           coords <- coord$transform(data, panel_scales)
+                           
+                           # Construct & return a grid object
+                           pointsGrob(x = coords$x,
+                                      y = coords$y,
+                                      pch = coords$shape)
+                       })
+
+geom_mypoint <- function(mapping = NULL, data = NULL, stat = "identity",
+                         position = "identity", na.rm = FALSE, 
+                         show.legend = NA, inherit.aes = TRUE, ...) {
+        ggplot2::layer(
+                geom = GeomMyPoint, mapping = mapping,  
+                data = data, stat = stat, position = position, 
+                show.legend = show.legend, inherit.aes = inherit.aes,
+                params = list(na.rm = na.rm, ...)
+        )
+}
+
+base_plot <- ggplot(data = mpg, mapping= aes(x = displ, y = hwy))
+
+one_panel <- base_plot  + geom_mypoint()
+
+multi_panels_by_cyl <- base_plot  + 
+    geom_mypoint() +
+    facet_grid(. ~ cyl)
+
+grid.arrange(one_panel, multi_panels_by_cyl, nrow = 1)
+```
+
+The `draw_group` function can be used when the data is plot by groups and,  one graphic element must be plot per group. See example below ...
+
+```{r aSimpleGeomByGroupExample}
+```
 
 
 # Session Info
@@ -291,11 +350,7 @@ sessionInfo()
 # References
 
 [1] "The grid package" chapter in "[Mastering Software Development in R](http://rdpeng.github.io/RProgDA/the-grid-package.html)" by Roger D. Peng, Sean Cross and Brooke Anderson, 2017  
-[2] Vignette ["Introduction to grid"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/grid.pdf) by Paul Murrell, April 2017   
-[3] Vignette ["Working with grid viewports"](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/viewports.pdf) by Paul Murrell, November 2016   
-[4] Vignette ["Arranging multiple grobs on a page"](https://cran.r-project.org/web/packages/gridExtra/vignettes/arrangeGrob.html) by Baptiste Auguie, September 2017  
-[5] Vignette ["(Unofficial) overview of gtable"](https://cran.r-project.org/web/packages/gridExtra/vignettes/gtable.html) by Baptiste Auguie, September 2017  
-[6] Vignette ["Displaying tables as grid graphics"](https://cran.r-project.org/web/packages/gridExtra/vignettes/tableGrob.html) by Baptiste Auguie, September 2017  
+[2] Vignette [Extending ggplot2"](https://cran.r-project.org/web/packages/ggplot2/vignettes/extending-ggplot2.html)   
 
 __Interesting book__:
 
