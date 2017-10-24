@@ -384,15 +384,10 @@ ggplot(mpg, aes(displ, hwy)) +
 ggplot(mpg, aes(displ, hwy, colour = class)) + 
   geom_centroid_polygon(fill = NA)
 ```
+
 ## Summary
 
 Building new graphical elements, _stat_(s) or _geom_(s),can be useful if a new new graphical element is needed or to simplify a complex graphical task/ process that must be used repeatedly in many plots. The building of the new graphical element is done using the extending mechanism provided by `ggplot2` [2]. More examples of ggplot2 extension can be found at [3].
-
-# Session Info
-
-```{r information}
-sessionInfo()
-```
 
 # References
 
@@ -411,3 +406,9 @@ __Previous "Building Data Visualization Tools" blogs__:
 - Part 3: "[Guidelines for good plots](https://pparacch.github.io/2017/07/18/plotting_in_R_ggplot2_part_3.html)"  
 - Part 4: "[How to work with maps](https://pparacch.github.io/2017/08/28/plotting_in_R_ggplot2_part_4.html)"  
 - Part 5: "[Customise `ggplot2` output with `grid`](https://pparacch.github.io/2017/09/25/plotting_in_R_ggplot2_part_5.html)"
+
+# Session Info
+
+```{r information}
+sessionInfo()
+```
