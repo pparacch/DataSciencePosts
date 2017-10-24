@@ -15,16 +15,18 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, collapse = 
 
 ---
 
-The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1].
+The content of this blog is based on examples/ notes/ experiments related to the material presented in the "Building Data Visualization Tools" module of the "[Mastering Software Development in R](https://www.coursera.org/specializations/r)" Specialization (Coursera) created by __Johns Hopkins University__ [1] and supporting documentation on extending `ggplot2` [2].
 
 Required packages:
 
-- the `ggplot2` package,
-- ...
+- the `ggplot2` package, the fundation for building new __stat__(s)/ __geom__(s)
+- the `grid` package, a catalog of building blocks for building new __geom__(s) 
+- the `gridExtra` package, used for combined different plots. 
 
 ```{r loadRequiredPackages}
-# If ggplot2 package is not installed
-# install.packages("ggplot2")
+# If a package is not locally installed
+# install.packages("packageName")
+
 library(ggplot2)
 library(grid)
 library(gridExtra)
@@ -32,25 +34,16 @@ library(gridExtra)
 
 # Building new graphical elements: basic concepts
 
-Key elements in `ggplot2` are _geoms_ and _stats_, which allow to create interesting and rich data graphics and visualizations.
-
-Why do new graphic capabilities need to be created?
-
-- There is limited support in `ggplot2` for the type of graphic capabilities needed (new type of plot).
-
-- The same plot needs to be created over and over and, the creation of the plot is quite complex (simplify a complex workflow).
-
-Building new _geoms_ or _stats_ is the plotting equivalent of writing functions.
-
+Key elements in `ggplot2` are _geoms_ and _stats_, which allow to create interesting and rich data graphics and visualizations. The building new _geoms_ or _stats_ is the plotting equivalent of writing functions and it can be achieved using the __extending__ mechanism/ framework provided by the `ggplot2` package [2]. 
 
 The building of a new __geom__/ __stat__ feature follows a two step process:
 
 1. use the `ggplot2::ggproto()` function to create a new class corresponding to your new feature,
     - inheriting from the `Geom` or `Stat` class  
     
-2. implement the `geom_*` or `stat_*` function returning a layer that can be added to a plot previously created using the `ggplot()` function.
+2. implement the `geom_*` or `stat_*` function returning a graphic layer that can be added to a plot previously created using the `ggplot()` function.
 
-All `ggplot2` objects are created using the __ggproto Object-Oriented system__ which allows the creation of mutable objects (for more info about ggproto see http://ggplot2.tidyverse.org/articles/extending-ggplot2.html). 
+All `ggplot2` objects are created using the __ggproto Object-Oriented System__ which allows the creation of mutable objects (for some more info about ggproto OOS see [2]). 
 
 A simple example of how to create a `ggproto` object can be found below  ...
 
@@ -75,15 +68,12 @@ A$x
 
 ## How to create a new __stat__
 
-All of the `stat_*` functions return a layer object, that is a combination of data, __stat__ and __geom__ with a potential position adjustment. 
+All of the `stat_*` functions return a layer object, that is a combination of data, __stat__ and __geom__ with a potential position adjustment. The new `Stat*` class is a `ggproto` class and a `Stat` class (inheritance), overriding some specific methods (see `?Stat` for more information).
 
-The new `Stat*` class is a `ggproto` class and a `Stat` class (inheritance), overriding some specific methods (see `?Stat` for more information).
-
-Some examples ...
+Some examples from [2] ...
 
 ```{r buldingStatSimpleExample}
-# creation of a convex hull
-
+# Stat used for the creation of a convex hull
 # stat implementation
 # (override) compute_group, called once per group
 # (override) required_aes, aesthetics needed to render the geom
@@ -127,6 +117,7 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy, colour = drv)) +
     stat_convexHull(geom = "point", size = 4)
 ```
 
+Another example from [2] ...
 
 ```{r buildStatMoreComplexExample}
 # creation of a simple version of geom_smooth
@@ -168,7 +159,7 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
     stat_lm(formula = y ~ poly(x, 6), geom = "point", n = 50, colour = "red")
 ```
 
-Sometimes there are calculations that need to be __performed only once for the dataset__, not for each group. The `setup_params` function, defined in the `Stat` class, can be used for this purpose.
+Sometimes there are calculations that need to be __performed only once for the dataset__, not for each group. The `setup_params` function, defined in the `Stat` class, can be used for this purpose (see example below from [2]).
 
 ```{r buildStatMoreComplexExample_1}
 StatDensityCommon <- ggproto("_class" = "StatDensityCommon", "_inherit" = Stat,
@@ -219,7 +210,7 @@ ggplot(data = mpg, mapping = aes(x = displ, colour = drv)) +
 
 Important aspects to consider: __variable names__ and __default aesthetics__. If you want to make a _stat_ usable with other _geoms_ we need to be careful with the chosen names.
 
-> If we want to make this stat usable with other geoms, we should return a variable called density instead of y. Then we can set up the default_aes to automatically map density to y, which allows the user to override it to use with different geoms.
+> _"If we want to make this stat usable with other geoms, we should return a variable called density instead of y. Then we can set up the default_aes to automatically map density to y, which allows the user to override it to use with different geoms."_
 
 ```{r buildStatMoreComplexExample_2}
 StatDensityCommon <- ggproto("StatDensityCommonE", Stat, 
@@ -244,7 +235,7 @@ ggplot(mpg, aes(displ, fill = drv)) +
   stat_densityCommon(bandwidth = 0.75, geom = "area", position = "stack", alpha = 0.4)
 ```
 
-The `setup_params` function can be used to line up the x-ranges for the different groups. See example below ...
+The `setup_params` function can be used to line up the x-ranges for the different groups. See example below from [2]...
 
 ```{r buildStatMoreComplexExample_3}
 StatDensityCommon <- ggproto("StatDensityCommonF", Stat, 
@@ -293,7 +284,7 @@ Specific methods/ fields are
 - either `draw_panel` or `draw_group` function returning a grid grob to be plotted
 
 
-The `draw_panel` function can be used when data is plot by panels and, each row in `data` represents a graphic element in a panel. See examples below ...
+The `draw_panel` function can be used when data is plot by panels and, each row in `data` represents a graphic element in a panel. See examples below from [2]...
 
 
 ```{r aSimpleGeomByPanelExample}
@@ -333,7 +324,7 @@ multi_panels_by_cyl <- base_plot  +
 grid.arrange(one_panel, multi_panels_by_cyl, nrow = 1)
 ```
 
-The `draw_group` function can be used when the data is plot by groups and, one graphic element must be plot per each group. See example below ...
+The `draw_group` function can be used when the data is plot by groups and, one graphic element must be plot per each group. See example below (inspired by [2]) used to create a Geom that is plotting the convex hull of the provided polygon with its centroid  ...
 
 ```{r aSimpleGeomByGroupExample}
 
@@ -393,7 +384,9 @@ ggplot(mpg, aes(displ, hwy)) +
 ggplot(mpg, aes(displ, hwy, colour = class)) + 
   geom_centroid_polygon(fill = NA)
 ```
+## Summary
 
+Building new graphical elements, _stat_(s) or _geom_(s),can be useful if a new new graphical element is needed or to simplify a complex graphical task/ process that must be used repeatedly in many plots. The building of the new graphical element is done using the extending mechanism provided by `ggplot2` [2]. More examples of ggplot2 extension can be found at [3].
 
 # Session Info
 
@@ -401,11 +394,11 @@ ggplot(mpg, aes(displ, hwy, colour = class)) +
 sessionInfo()
 ```
 
-
 # References
 
-[1] "The grid package" chapter in "[Mastering Software Development in R](http://rdpeng.github.io/RProgDA/the-grid-package.html)" by Roger D. Peng, Sean Cross and Brooke Anderson, 2017  
-[2] Vignette [Extending ggplot2"](https://cran.r-project.org/web/packages/ggplot2/vignettes/extending-ggplot2.html)   
+[1] "Building New Graphical Elements" chapter in "[Mastering Software Development in R](http://rdpeng.github.io/RProgDA/building-new-graphical-elements.html)" by Peng, Cross and Anderson, 2017  
+[2] Article ["Extending ggplot2"](http://ggplot2.tidyverse.org/articles/extending-ggplot2.html)  
+[3] Some examples of [ggplot2-extensions](http://www.ggplot2-exts.org/index.html)
 
 __Interesting book__:
 
