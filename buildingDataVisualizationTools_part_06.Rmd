@@ -165,26 +165,26 @@ Sometimes there are calculations that need to be __performed only once for the d
 StatDensityCommon <- ggproto("_class" = "StatDensityCommon", "_inherit" = Stat,
                              required_aes = "x",
                              setup_params = function(data, params){
-                                 print("Running set_up....")
+                                 # print("Running set_up....")
                                  if(!is.null(params$bandwidth)) return(params)
                                  
                                  xs <- split(data$x, data$group)
                                  bws <- vapply(xs, bw.nrd0, numeric(1))
                                  bw <- mean(bws)
-                                 message("Picking bandwidth of ", signif(bw, 3))
+                                 # message("Picking bandwidth of ", signif(bw, 3))
                                  
                                  params$bandwidth <- bw
-                                 print("End set_up....")
+                                 # print("End set_up....")
                                  params
                                  
                              },
                              
                              compute_group = function(data, scales, bandwidth = 1){
-                                 print(paste("Running compute_group [", unique(data$group), "] ..."))
-                                 str(data)
-                                 print(bandwidth)
+                                 # print(paste("Running compute_group [", unique(data$group), "] ..."))
+                                 # str(data)
+                                 # print(bandwidth)
                                  d <- density(data$x,bandwidth)
-                                 print("End compute_group....")
+                                 # print("End compute_group....")
                                  data.frame(x = d$x, y = d$y)
                              })
 
@@ -218,9 +218,9 @@ StatDensityCommon <- ggproto("StatDensityCommonE", Stat,
   default_aes = aes(y = ..density..),
 
   compute_group = function(data, scales, bandwidth = 1) {
-    print(paste("Running compute_group [", unique(data$group), "] ..."))
+    # print(paste("Running compute_group [", unique(data$group), "] ..."))
     d <- density(data$x, bw = bandwidth)
-    print(paste("x (range):", paste(range(d$x), collapse = " - "), "- bw:", bandwidth))
+    # print(paste("x (range):", paste(range(d$x), collapse = " - "), "- bw:", bandwidth))
     data.frame(x = d$x, density = d$y)
   }  
 )
@@ -243,11 +243,11 @@ StatDensityCommon <- ggproto("StatDensityCommonF", Stat,
   default_aes = aes(y = ..density..),
   
   setup_params = function(data, params){
-      print("Running set_up....")
+      # print("Running set_up....")
       min <- min(data$x) - 3 * params$bandwidth
       max <- max(data$x) + 3 * params$bandwidth
-      print(paste("min:", min, "- max:", max, "- bw:", params$bandwidth))
-      print("End set_up....")
+      # print(paste("min:", min, "- max:", max, "- bw:", params$bandwidth))
+      # print("End set_up....")
       list(
         bandwidth = params$bandwidth,
         min = min,
@@ -257,10 +257,10 @@ StatDensityCommon <- ggproto("StatDensityCommonF", Stat,
   },
   
   compute_group = function(data, scales, min, max, bandwidth = 1) {
-    print(paste("Running compute_group [", unique(data$group), "] ..."))
+    # print(paste("Running compute_group [", unique(data$group), "] ..."))
     d <- density(data$x, bw = bandwidth, from = min, to = max)
-    print(paste("x (range):", paste(range(d$x), collapse = " - "), "- bw:", bandwidth))
-    print("End compute_group....")
+    # print(paste("x (range):", paste(range(d$x), collapse = " - "), "- bw:", bandwidth))
+    # print("End compute_group....")
     data.frame(x = d$x, density = d$y)
   }  
 )
