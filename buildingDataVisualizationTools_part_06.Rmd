@@ -229,9 +229,7 @@ StatDensityCommon <- ggproto("StatDensityCommonE", Stat,
   compute_group = function(data, scales, bandwidth = 1) {
     print(paste("Running compute_group [", unique(data$group), "] ..."))
     d <- density(data$x, bw = bandwidth)
-    print(range(d$x))
-    print(range(d$y))
-    print("End compute_group....")
+    print(paste("x (range):", paste(range(d$x), collapse = " - "), "- bw:", bandwidth))
     data.frame(x = d$x, density = d$y)
   }  
 )
@@ -243,7 +241,7 @@ ggplot(mpg, aes(displ, drv, colour = ..density..)) +
 # The areas don’t stack on top of each other because each density 
 # is computed independently, and the estimated x-ranges don’t line up.
 ggplot(mpg, aes(displ, fill = drv)) + 
-  stat_densityCommon(bandwidth = 1, geom = "area", position = "stack", alpha = 0.4)
+  stat_densityCommon(bandwidth = 0.75, geom = "area", position = "stack", alpha = 0.4)
 ```
 
 The `setup_params` function can be used to line up the x-ranges for the different groups. See example below ...
@@ -270,8 +268,7 @@ StatDensityCommon <- ggproto("StatDensityCommonF", Stat,
   compute_group = function(data, scales, min, max, bandwidth = 1) {
     print(paste("Running compute_group [", unique(data$group), "] ..."))
     d <- density(data$x, bw = bandwidth, from = min, to = max)
-    print(range(d$x))
-    print(range(d$y))
+    print(paste("x (range):", paste(range(d$x), collapse = " - "), "- bw:", bandwidth))
     print("End compute_group....")
     data.frame(x = d$x, density = d$y)
   }  
@@ -281,12 +278,12 @@ ggplot(mpg, aes(displ, fill = drv)) +
   stat_densityCommon(bandwidth = 0.75, geom = "area", position = "stack", alpha = 0.4)
 
 ggplot(mpg, aes(displ, drv, fill = ..density..)) + 
-  stat_densityCommon(bandwidth = 1, geom = "raster")
+  stat_densityCommon(bandwidth = 0.75, geom = "raster")
 ```
 
 ## How to create a new __geom__
 
-All of the `geom_*` functions return a layer that contains a `Geom*` object (instance of the `Geom*` class), responsible for rendering the data in the plot.  The `Geom*` class is a `ggproto` class and a `Geom` class, overriding some specific methods/ fields (see `?Geom` for more information).
+All of the `geom_*` functions return a layer that contains a `Geom*` object (instance of the `Geom*` class), responsible for rendering the data in the plot.  The `Geom*` class is a `ggproto` class and a `Geom` class (inheritance), overriding some specific methods/ fields (see `?Geom` for more information).
 
 Specific methods/ fields are
 
@@ -336,33 +333,50 @@ multi_panels_by_cyl <- base_plot  +
 grid.arrange(one_panel, multi_panels_by_cyl, nrow = 1)
 ```
 
-The `draw_group` function can be used when the data is plot by groups and,  one graphic element must be plot per each group. See example below ...
+The `draw_group` function can be used when the data is plot by groups and, one graphic element must be plot per each group. See example below ...
 
 ```{r aSimpleGeomByGroupExample}
 
 GeomCentroidPolygon <- ggproto("GeomCentroidPolygon", Geom,
+                               
                                required_aes = c("x", "y"),
-                               #default_aes = aes(colour = "red"),
-                               draw_key = draw_key_blank,
+                               
+                               default_aes = aes(colour = "black", fill = "grey70", size = 0.5,
+                                                 linetype = 1, alpha = 1),
+                               
+                               draw_key = draw_key_polygon,
+                               
                                draw_group = function(data, panel_scales,coord){
                                  n <- nrow(data)
                                  if(n <= 2) return(grid::nullGrob())
                                  
                                  coords <- coord$transform(data, panel_scales)
-                                 first_row_col <- coords[1, "colour"]
+                                     first_row <- coords[1, , drop = FALSE]
                                  
                                  centroid_x <- mean(coords$x, na.rm = T)
                                  centroid_y <- mean(coords$y, na.rm = T)
-                                 #print(paste(n, centroid_x, centroid_y, 
-                                 #           first_row_col, sep = ", "))
                                  
-                                 grid::pointsGrob(x = centroid_x, y = centroid_y,
-                                                  gp = grid::gpar(col = first_row_col),
-                                                  pch = 4)
+                                 poly_elem <- grid::polygonGrob(name = "polygonChull",
+                                   x = coords$x, y = coords$y, 
+                                   default.units = "native",
+                                   gp = grid::gpar(
+                                     col = first_row$colour,
+                                     fill = scales::alpha(first_row$fill, first_row$alpha),
+                                     lwd = first_row$size * .pt,
+                                     lty = first_row$linetype
+                                   )
+                                 )
+                                 
+                                 centroid_elem <- grid::pointsGrob(name = "centroid",
+                                                                   x = centroid_x, y = centroid_y,
+                                                                   gp = grid::gpar(col = first_row$colour),
+                                                                   pch = 4)
+                                 
+                                 gTree(children = gList(poly_elem, centroid_elem))
                                  
                                })
 
-geom_centroid_polygon <- function(mapping = NULL, data = NULL, stat = "identity",
+geom_centroid_polygon <- function(mapping = NULL, data = NULL, stat = "convexHull",
                                 position = "identity", na.rm = FALSE, show.legend = NA, 
                                 inherit.aes = TRUE, ...) {
   layer(
@@ -377,9 +391,7 @@ ggplot(mpg, aes(displ, hwy)) +
   geom_point()
 
 ggplot(mpg, aes(displ, hwy, colour = class)) + 
-  geom_centroid_polygon()+
-  geom_point()
-
+  geom_centroid_polygon(fill = NA)
 ```
 
 
