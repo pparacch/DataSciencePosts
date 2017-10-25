@@ -1,17 +1,7 @@
----
-title: "Building Data Visualization Tools (Part 6)"
-author: "Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`"
-output: 
-  html_document: 
-    fig_width: 6
-    keep_md: yes
-    toc: yes
-    toc_depth: 5
----
+# Building Data Visualization Tools (Part 6)
+Pier Lorenzo Paracchini, `r format(Sys.time(), '%d.%m.%Y')`  
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, collapse = TRUE)
-```
+
 
 ---
 
@@ -23,7 +13,8 @@ Required packages:
 - the `grid` package, a catalog of building blocks for building new __geom__(s) 
 - the `gridExtra` package, used for combined different plots. 
 
-```{r loadRequiredPackages}
+
+```r
 # If a package is not locally installed
 # install.packages("packageName")
 
@@ -47,7 +38,8 @@ All `ggplot2` objects are created using the __ggproto Object-Oriented System__ w
 
 A simple example of how to create a `ggproto` object can be found below  ...
 
-```{r simpleExampleWith_ggproto}
+
+```r
 # Create a ggproto object
 A <- ggplot2::ggproto("_class" = "MyClass", "_inherit" = NULL,
                        x = 1,
@@ -57,13 +49,18 @@ A <- ggplot2::ggproto("_class" = "MyClass", "_inherit" = NULL,
 
 # Check the structure of the object
 str(A)
+## Classes 'MyClass', 'ggproto' <ggproto object: Class MyClass>
+##     inc: function
+##     x: 1
 
 # Visualize the value of x
 A$x
+## [1] 1
 
 # Increment & visualize x
 A$inc()
 A$x
+## [1] 2
 ```
 
 ## How to create a new __stat__
@@ -72,7 +69,8 @@ All of the `stat_*` functions return a layer object, that is a combination of da
 
 Some examples from [2] ...
 
-```{r buldingStatSimpleExample}
+
+```r
 # Stat used for the creation of a convex hull
 # stat implementation
 # (override) compute_group, called once per group
@@ -101,15 +99,30 @@ stat_convexHull <- function(geom = "polygon", data = NULL, mapping = NULL,
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
     geom_point() +
     stat_convexHull(fill = NA, colour = "black")
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buldingStatSimpleExample-1.png)<!-- -->
+
+```r
 
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy, colour = drv)) + 
     geom_point() +
     stat_convexHull(fill = NA)
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buldingStatSimpleExample-2.png)<!-- -->
+
+```r
 
 # Using a different geom (GeomPoint) with the new stat
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
     geom_point() +
     stat_convexHull(geom = "point", size = 4, colour = "red")
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buldingStatSimpleExample-3.png)<!-- -->
+
+```r
 
 # Using a different geom (GeomPoint) with the new stat
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy, colour = drv)) + 
@@ -117,9 +130,12 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy, colour = drv)) +
     stat_convexHull(geom = "point", size = 4)
 ```
 
+![](buildingDataVisualizationTools_part_06_files/figure-html/buldingStatSimpleExample-4.png)<!-- -->
+
 Another example from [2] ...
 
-```{r buildStatMoreComplexExample}
+
+```r
 # creation of a simple version of geom_smooth
 
 StatLm <- ggproto("_class" = "StatLm", "_inherit" = Stat,
@@ -150,6 +166,11 @@ stat_lm <- function(mapping = NULL, data = NULL, geom = "line",
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
     geom_point() +
     stat_lm()
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample-1.png)<!-- -->
+
+```r
 
 
 ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
@@ -159,9 +180,12 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
     stat_lm(formula = y ~ poly(x, 6), geom = "point", n = 50, colour = "red")
 ```
 
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample-2.png)<!-- -->
+
 Sometimes there are calculations that need to be __performed only once for the dataset__, not for each group. The `setup_params` function, defined in the `Stat` class, can be used for this purpose (see example below from [2]).
 
-```{r buildStatMoreComplexExample_1}
+
+```r
 StatDensityCommon <- ggproto("_class" = "StatDensityCommon", "_inherit" = Stat,
                              required_aes = "x",
                              setup_params = function(data, params){
@@ -198,21 +222,34 @@ stat_densityCommon <- function(data = NULL, mapping = NULL, geom = "line",
 
 ggplot(data = mpg, mapping = aes(x = displ)) +
     stat_densityCommon(bandwidth = 0.25)
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample_1-1.png)<!-- -->
+
+```r
 
 # Bandwidth is calculated from the data (once) 
 ggplot(data = mpg, mapping = aes(x = displ)) +
     stat_densityCommon()
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample_1-2.png)<!-- -->
+
+```r
 
 
 ggplot(data = mpg, mapping = aes(x = displ, colour = drv)) +
     stat_densityCommon()
 ```
 
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample_1-3.png)<!-- -->
+
 Important aspects to consider: __variable names__ and __default aesthetics__. If you want to make a _stat_ usable with other _geoms_ we need to be careful with the chosen names.
 
 > _"If we want to make this stat usable with other geoms, we should return a variable called density instead of y. Then we can set up the default_aes to automatically map density to y, which allows the user to override it to use with different geoms."_
 
-```{r buildStatMoreComplexExample_2}
+
+```r
 StatDensityCommon <- ggproto("StatDensityCommonE", Stat, 
   required_aes = "x",
   default_aes = aes(y = ..density..),
@@ -227,6 +264,11 @@ StatDensityCommon <- ggproto("StatDensityCommonE", Stat,
 
 ggplot(mpg, aes(displ, drv, colour = ..density..)) + 
   stat_densityCommon(bandwidth = 1, geom = "point")
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample_2-1.png)<!-- -->
+
+```r
 
 # Using this stat with the area geom doesn’t work quite right. 
 # The areas don’t stack on top of each other because each density 
@@ -235,9 +277,12 @@ ggplot(mpg, aes(displ, fill = drv)) +
   stat_densityCommon(bandwidth = 0.75, geom = "area", position = "stack", alpha = 0.4)
 ```
 
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample_2-2.png)<!-- -->
+
 The `setup_params` function can be used to line up the x-ranges for the different groups. See example below from [2]...
 
-```{r buildStatMoreComplexExample_3}
+
+```r
 StatDensityCommon <- ggproto("StatDensityCommonF", Stat, 
   required_aes = "x",
   default_aes = aes(y = ..density..),
@@ -267,10 +312,17 @@ StatDensityCommon <- ggproto("StatDensityCommonF", Stat,
 
 ggplot(mpg, aes(displ, fill = drv)) + 
   stat_densityCommon(bandwidth = 0.75, geom = "area", position = "stack", alpha = 0.4)
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample_3-1.png)<!-- -->
+
+```r
 
 ggplot(mpg, aes(displ, drv, fill = ..density..)) + 
   stat_densityCommon(bandwidth = 0.75, geom = "raster")
 ```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/buildStatMoreComplexExample_3-2.png)<!-- -->
 
 ## How to create a new __geom__
 
@@ -287,7 +339,8 @@ Specific methods/ fields are
 The `draw_panel` function can be used when data is plot by panels and, each row in `data` represents a graphic element in a panel. See examples below from [2]...
 
 
-```{r aSimpleGeomByPanelExample}
+
+```r
 GeomMyPoint <- ggproto("_class" = "GeomMyPoint", Geom,
                        required_aes = c("x", "y"),
                        default_aes = aes(shape = 1),
@@ -324,9 +377,12 @@ multi_panels_by_cyl <- base_plot  +
 grid.arrange(one_panel, multi_panels_by_cyl, nrow = 1)
 ```
 
+![](buildingDataVisualizationTools_part_06_files/figure-html/aSimpleGeomByPanelExample-1.png)<!-- -->
+
 The `draw_group` function can be used when the data is plot by groups and, one graphic element must be plot per each group. See example below (inspired by [2]) used to create a Geom that is plotting the convex hull of the provided polygon with its centroid  ...
 
-```{r aSimpleGeomByGroupExample}
+
+```r
 
 GeomCentroidPolygon <- ggproto("GeomCentroidPolygon", Geom,
                                
@@ -380,10 +436,17 @@ geom_centroid_polygon <- function(mapping = NULL, data = NULL, stat = "convexHul
 ggplot(mpg, aes(displ, hwy)) + 
   geom_centroid_polygon()+
   geom_point()
+```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/aSimpleGeomByGroupExample-1.png)<!-- -->
+
+```r
 
 ggplot(mpg, aes(displ, hwy, colour = class)) + 
   geom_centroid_polygon(fill = NA)
 ```
+
+![](buildingDataVisualizationTools_part_06_files/figure-html/aSimpleGeomByGroupExample-2.png)<!-- -->
 
 ## Summary
 
@@ -409,6 +472,28 @@ __Previous "Building Data Visualization Tools" blogs__:
 
 # Session Info
 
-```{r information}
+
+```r
 sessionInfo()
+## R version 3.3.3 (2017-03-06)
+## Platform: x86_64-apple-darwin13.4.0 (64-bit)
+## Running under: macOS  10.13
+## 
+## locale:
+## [1] no_NO.UTF-8/no_NO.UTF-8/no_NO.UTF-8/C/no_NO.UTF-8/no_NO.UTF-8
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+## [1] gridExtra_2.3 ggplot2_2.2.1
+## 
+## loaded via a namespace (and not attached):
+##  [1] Rcpp_0.12.12     digest_0.6.12    rprojroot_1.2    plyr_1.8.4      
+##  [5] gtable_0.2.0     backports_1.1.0  magrittr_1.5     evaluate_0.10.1 
+##  [9] scales_0.5.0     rlang_0.1.2      stringi_1.1.5    reshape2_1.4.2  
+## [13] lazyeval_0.2.0   rmarkdown_1.6    labeling_0.3     tools_3.3.3     
+## [17] stringr_1.2.0    munsell_0.4.3    yaml_2.1.14      colorspace_1.3-2
+## [21] htmltools_0.3.6  knitr_1.17       tibble_1.3.4
 ```
